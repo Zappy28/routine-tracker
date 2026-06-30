@@ -1,0 +1,240 @@
+.receipt {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: 0 1px 0 var(--line), 0 12px 24px -18px rgba(31, 31, 31, 0.35);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.receipt-top {
+  padding: 22px 22px 18px;
+  text-align: center;
+}
+
+.receipt-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.receipt-date {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 600;
+  margin: 6px 0 10px;
+}
+
+.receipt-status {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1px solid currentColor;
+}
+
+/* The torn-edge / perforation signature */
+.receipt-perforation {
+  height: 12px;
+  background-image: radial-gradient(
+    circle at 6px 6px,
+    var(--paper) 5px,
+    transparent 5px
+  );
+  background-size: 16px 12px;
+  background-position: -2px center;
+}
+
+.receipt-body {
+  padding: 6px 22px 22px;
+}
+
+/* ---- Medicine list ---- */
+.med-list {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+}
+
+.med-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  border-bottom: 1px dashed var(--line);
+  padding: 12px 0;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.med-row:last-child {
+  border-bottom: none;
+}
+
+.med-row .stamp {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: transparent;
+}
+
+.med-row.med-done .stamp {
+  border-color: var(--green);
+  color: var(--green);
+  transform: rotate(-8deg);
+}
+
+.med-row .med-name {
+  flex: 1;
+}
+
+.med-row.med-done .med-name {
+  color: var(--ink-soft);
+  text-decoration: line-through;
+}
+
+.med-row .med-time {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+/* ---- Metric line items, receipt-style rows ---- */
+.metric-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px dotted var(--line);
+  font-size: 0.92rem;
+}
+
+.metric-line:last-child {
+  border-bottom: none;
+}
+
+.metric-line .metric-label {
+  color: var(--ink-soft);
+}
+
+.metric-line .metric-value {
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.metric-line input[type="number"] {
+  width: 70px;
+  text-align: right;
+  font-family: var(--font-mono);
+  border: none;
+  border-bottom: 1px solid var(--ink-soft);
+  background: transparent;
+  color: var(--ink);
+  padding: 2px 0;
+}
+
+.metric-line input[type="number"]:focus {
+  outline: none;
+  border-bottom-color: var(--ink);
+}
+
+.metric-line input[type="range"] {
+  flex: 1;
+  margin: 0 12px;
+  accent-color: var(--ink);
+}
+
+/* ---- Scale buttons (energy/mood) ---- */
+.scale-row {
+  padding: 10px 0;
+  border-bottom: 1px dotted var(--line);
+}
+
+.scale-row:last-child {
+  border-bottom: none;
+}
+
+.scale-row .metric-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+}
+
+.scale-options {
+  display: flex;
+  gap: 6px;
+}
+
+.scale-btn {
+  flex: 1;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 7px 0;
+  font-size: 1.05rem;
+}
+
+.scale-btn.scale-selected {
+  border-color: var(--ink);
+  background: var(--paper-raised);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px dotted var(--line);
+}
+
+.toggle-row .pill {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  background: var(--paper);
+}
+
+.toggle-row .pill.pill-on {
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-bg);
+}
+
+.notes-input {
+  width: 100%;
+  margin-top: 14px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--ink);
+  resize: vertical;
+}
+
+.notes-input:focus {
+  outline: none;
+  border-color: var(--ink-soft);
+}

@@ -1,0 +1,223 @@
+.med-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.med-card-header h3 {
+  margin: 0;
+}
+
+.settings-btn {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  font-size: 1rem;
+  padding: 4px;
+  line-height: 1;
+  border-radius: 8px;
+}
+
+.settings-btn:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.med-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.med-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-align: left;
+  color: var(--text);
+  font-size: 0.92rem;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.med-row:hover {
+  border-color: var(--border);
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  border: 1.5px solid var(--text-faint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: transparent;
+}
+
+.med-row.med-done .checkbox {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--bg);
+}
+
+.med-name {
+  flex: 1;
+}
+
+.med-row.med-done .med-name {
+  color: var(--text-soft);
+  text-decoration: line-through;
+}
+
+.med-time {
+  font-size: 0.78rem;
+  color: var(--text-faint);
+}
+
+.status-pill {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+/* ---- Daily metrics ---- */
+.metric-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.metric-row:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.metric-label {
+  width: 64px;
+  flex-shrink: 0;
+  font-size: 0.88rem;
+  color: var(--text-soft);
+}
+
+.metric-row input[type="range"] {
+  flex: 1;
+  accent-color: var(--green);
+}
+
+.metric-value {
+  width: 52px;
+  text-align: right;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+.metric-input {
+  flex: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.toggle-btn {
+  margin-left: auto;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 0.82rem;
+}
+
+.toggle-btn.toggle-on {
+  background: var(--green-bg);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.scale-row {
+  align-items: flex-start;
+}
+
+.scale-options {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+}
+
+.scale-btn {
+  flex: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 0;
+  font-size: 1.05rem;
+}
+
+.scale-btn.scale-selected {
+  border-color: var(--text);
+  background: var(--surface);
+}
+
+.notes-input {
+  width: 100%;
+  margin-top: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.88rem;
+  resize: vertical;
+}
+
+/* ---- Settings modal ---- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  max-width: 360px;
+  width: 100%;
+}
+
+.modal h3 {
+  margin-top: 0;
+}
+
+.modal p {
+  color: var(--text-soft);
+  font-size: 0.88rem;
+}
