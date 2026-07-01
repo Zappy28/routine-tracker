@@ -1,168 +1,659 @@
 import { useState } from "react";
-import Card from "../components/Card";
 import { today as initialToday } from "../data/mockData";
 import "./Dashboard.css";
 
+
 const initialMeds = [
-  { id: 1, name: "Vitamin D", time: "Morning", done: false },
-  { id: 2, name: "Melatonin", time: "Night", done: false },
+  {
+    id:"vitD",
+    name:"Vitamin D",
+    time:"Morning",
+    taken:false
+  },
+  {
+    id:"omega",
+    name:"Omega-3",
+    time:"Morning",
+    taken:false
+  },
+  {
+    id:"mag",
+    name:"Magnesium",
+    time:"Night",
+    taken:false
+  }
 ];
 
-const energyFaces = ["1", "2", "3", "4", "5"];
-const moodFaces = ["1", "2", "3", "4", "5"];
 
-function Home() {
-  const [meds, setMeds] = useState(initialMeds);
-  const [showMedSettings, setShowMedSettings] = useState(false);
+function Home(){
 
-  const [day, setDay] = useState(initialToday);
-  const [sleep, setSleep] = useState(7);
-  const [energy, setEnergy] = useState(null);
-  const [mood, setMood] = useState(null);
+const [day] = useState(initialToday);
 
-  const toggleMed = (id) =>
-    setMeds((prev) => prev.map((m) => (m.id === id ? { ...m, done: !m.done } : m)));
 
-  const medsComplete = meds.length > 0 && meds.every((m) => m.done);
+const [meds,setMeds] =
+useState(initialMeds);
 
-  return (
-    <div>
-      <h1 style={{ fontSize: "1.4rem", fontWeight: 600, margin: "0 0 4px" }}>
-        {day.date}
-      </h1>
-      <p style={{ color: "var(--text-soft)", fontSize: "0.9rem", margin: "0 0 22px" }}>
-        Quick check-in for today
-      </p>
 
-      {/* Medicine Tracker */}
-      <section className="card">
-        <div className="med-card-header">
-          <h3>Medicine</h3>
-          <button
-            className="settings-btn"
-            aria-label="Medicine settings"
-            onClick={() => setShowMedSettings(true)}
-          >
-            ⚙
-          </button>
-        </div>
+const [sleep,setSleep] =
+useState(null);
 
-        <ul className="med-list">
-          {meds.map((med) => (
-            <li key={med.id}>
-              <button
-                className={`med-row ${med.done ? "med-done" : ""}`}
-                onClick={() => toggleMed(med.id)}
-              >
-                <span className="checkbox">{med.done && "✓"}</span>
-                <span className="med-name">{med.name}</span>
-                <span className="med-time">{med.time}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
 
-        {medsComplete && <p className="status-pill">All medicine taken</p>}
-      </section>
+const [weight,setWeight] =
+useState(null);
 
-      {/* Daily Metrics */}
-      <section className="card">
-        <h3>Daily metrics</h3>
 
-        <div className="metric-row">
-          <span className="metric-label">Sleep</span>
-          <input
-            type="range"
-            min="0"
-            max="12"
-            step="0.5"
-            value={sleep}
-            onChange={(e) => setSleep(e.target.value)}
-          />
-          <span className="metric-value">{sleep} hrs</span>
-        </div>
+const [workout,setWorkout] =
+useState(false);
 
-        <div className="metric-row">
-          <span className="metric-label">Weight</span>
-          <input
-            type="number"
-            inputMode="decimal"
-            value={day.weight}
-            onChange={(e) => setDay((d) => ({ ...d, weight: e.target.value }))}
-            className="metric-input"
-          />
-        </div>
 
-        <div className="metric-row">
-          <span className="metric-label">Gym</span>
-          <button
-            className={`toggle-btn ${day.gym ? "toggle-on" : ""}`}
-            onClick={() => setDay((d) => ({ ...d, gym: !d.gym }))}
-          >
-            {day.gym ? "Done" : "Not yet"}
-          </button>
-        </div>
+const [mood,setMood] =
+useState(0);
 
-        <div className="metric-row scale-row">
-          <span className="metric-label">Energy</span>
-          <div className="scale-options">
-            {energyFaces.map((face, i) => (
-              <button
-                key={i}
-                className={`scale-btn ${energy === i ? "scale-selected" : ""}`}
-                onClick={() => setEnergy(i)}
-                aria-label={`Energy ${i + 1} of 5`}
-              >
-                {face}
-              </button>
-            ))}
-          </div>
-        </div>
 
-        <div className="metric-row scale-row">
-          <span className="metric-label">Mood</span>
-          <div className="scale-options">
-            {moodFaces.map((face, i) => (
-              <button
-                key={i}
-                className={`scale-btn ${mood === i ? "scale-selected" : ""}`}
-                onClick={() => setMood(i)}
-                aria-label={`Mood ${i + 1} of 5`}
-              >
-                {face}
-              </button>
-            ))}
-          </div>
-        </div>
+const [energy,setEnergy] =
+useState(0);
 
-        <textarea className="notes-input" placeholder="Notes (optional)" rows={2} />
-      </section>
 
-      <Card title="Quick actions">
-        <button className="btn" onClick={() => setDay((d) => ({ ...d, water: !d.water }))}>
-          💧 Log water
-        </button>
-        <button className="btn" onClick={() => setDay((d) => ({ ...d, gym: !d.gym }))}>
-          ⚖ Log workout
-        </button>
-      </Card>
 
-      {showMedSettings && (
-        <div className="modal-backdrop" onClick={() => setShowMedSettings(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Medicine settings</h3>
-            <p>
-              Name, frequency, and time-of-day fields go here — wire this up
-              to your Settings page form when that's built.
-            </p>
-            <button className="btn" onClick={() => setShowMedSettings(false)}>
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+const completed =
+meds.filter(m=>m.taken).length +
+(sleep ? 1:0) +
+(weight ? 1:0) +
+(workout ? 1:0) +
+(mood ? 1:0) +
+(energy ? 1:0);
+
+
+
+const completion =
+Math.round(
+(completed / 8) * 100
+);
+
+
+
+function toggleMed(id){
+
+setMeds(prev =>
+prev.map(m=>
+m.id===id
+?
+{
+...m,
+taken:true
 }
+:
+m
+));
+
+}
+
+
+
+return (
+
+<div className="routine-page">
+
+
+<header className="header">
+
+<div className="day-label">
+{day.date}
+</div>
+
+
+<h1>
+Good morning.
+</h1>
+
+</header>
+
+
+
+
+<div className="completion-block">
+
+<div className="completion-header">
+
+<span>
+DAILY COMPLETION
+</span>
+
+
+<b>
+{completion}%
+</b>
+
+</div>
+
+
+<div className="progress">
+
+<div
+style={{
+width:`${completion}%`
+}}
+/>
+
+</div>
+
+
+</div>
+
+
+
+
+
+<div className="divider"/>
+
+
+
+
+
+<section>
+
+
+<h3>
+MEDICATION
+</h3>
+
+
+
+{
+meds.map(m=>(
+
+<div
+className="med-item"
+key={m.id}
+>
+
+
+<div className="med-top">
+
+
+<div>
+
+<div className="med-name">
+{m.name}
+</div>
+
+
+<div className="med-time">
+
+{m.time}
+
+{" · "}
+
+{
+m.taken
+?
+"Taken"
+:
+"Not logged"
+}
+
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+
+<button
+
+className={
+m.taken
+?
+"med-btn taken"
+:
+"med-btn"
+}
+
+
+onClick={()=>
+toggleMed(m.id)
+}
+
+>
+
+{
+m.taken
+?
+"Taken"
+:
+"Mark as taken"
+}
+
+
+</button>
+
+
+
+</div>
+
+
+))
+
+}
+
+
+
+</section>
+
+
+
+
+
+<div className="divider"/>
+
+
+
+
+
+<section>
+
+
+<h3>
+SLEEP
+</h3>
+
+
+<div className="metric-row">
+
+
+<div>
+
+<div className="metric-name">
+
+{
+sleep
+?
+`${sleep}h`
+:
+"Not logged"
+}
+
+</div>
+
+
+<div className="metric-sub">
+Duration
+</div>
+
+
+</div>
+
+
+
+
+<div className="stepper">
+
+<button
+onClick={()=>
+setSleep(
+sleep
+?
+sleep-0.5
+:
+7.5
+)
+}
+>
+−
+</button>
+
+
+<span>
+
+{
+sleep
+?
+sleep+"h"
+:
+"--"
+}
+
+</span>
+
+
+
+<button
+
+onClick={()=>
+setSleep(
+sleep
+?
+sleep+0.5
+:
+7.5
+)
+}
+
+>
++
+</button>
+
+
+</div>
+
+
+
+</div>
+
+
+
+</section>
+
+
+
+
+
+
+
+<div className="divider"/>
+
+
+
+
+
+
+<section>
+
+
+<h3>
+WEIGHT
+</h3>
+
+
+<div className="metric-row">
+
+
+<div>
+
+<div className="metric-name">
+
+{
+weight
+?
+`${weight} lbs`
+:
+"Not logged"
+}
+
+</div>
+
+
+<div className="metric-sub">
+Today
+</div>
+
+
+</div>
+
+
+
+<div className="stepper">
+
+<button
+onClick={()=>
+setWeight(
+weight
+?
+weight-1
+:
+132
+)
+}
+>
+−
+</button>
+
+
+<span>
+{
+weight ?? "--"
+}
+</span>
+
+
+
+<button
+onClick={()=>
+setWeight(
+weight
+?
+weight+1
+:
+132
+)
+}
+>
++
+</button>
+
+
+</div>
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+
+<div className="divider"/>
+
+
+
+
+<section>
+
+
+<h3>
+ACTIVITY
+</h3>
+
+
+<div className="metric-row">
+
+
+<div>
+
+
+<div className="metric-name">
+Workout
+</div>
+
+
+<div className="metric-sub">
+
+{
+workout
+?
+"Completed today"
+:
+"Not logged"
+}
+
+</div>
+
+
+</div>
+
+
+
+<button
+
+className={
+workout
+?
+"workout done"
+:
+"workout"
+}
+
+
+onClick={()=>
+setWorkout(!workout)
+}
+
+>
+
+{
+workout
+?
+"Edit"
+:
+"Log workout"
+}
+
+
+</button>
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+
+<div className="divider"/>
+
+
+
+
+
+
+<section>
+
+
+<h3>
+WELLBEING
+</h3>
+
+
+
+{
+[
+["Mood",mood,setMood],
+["Energy",energy,setEnergy]
+
+].map(([name,value,setter])=>(
+
+
+<div className="metric-row"
+key={name}>
+
+
+<div>
+
+<div className="metric-name">
+{name}
+</div>
+
+
+<div className="metric-sub">
+
+{
+value
+?
+`${value} / 5`
+:
+"Not logged"
+}
+
+</div>
+
+
+</div>
+
+
+
+
+<div className="dots">
+
+{
+[1,2,3,4,5].map(n=>(
+
+<button
+
+key={n}
+
+className={
+value===n
+?
+"dot active"
+:
+"dot"
+}
+
+onClick={()=>
+setter(n)
+}
+
+ />
+
+))
+
+}
+
+</div>
+
+
+
+</div>
+
+
+
+))
+
+}
+
+
+</section>
+
+
+
+
+
+
+<div className="divider"/>
+
+
+
+
+
+<textarea
+
+className="notes"
+
+placeholder="Add a note for today..."
+
+ />
+
+
+
+
+</div>
+
+)
+
+
+}
+
 
 export default Home;

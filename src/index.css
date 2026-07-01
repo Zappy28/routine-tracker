@@ -114,3 +114,22 @@ main {
 .status-green { color: var(--green); }
 .status-yellow { color: var(--yellow); }
 .status-red { color: var(--red); }
+
+.full-app {
+
+  min-height:100vh;
+
+  background:#090909;
+
+}
+
+
+
+main {
+
+  min-height:100vh;
+
+  background:#090909;
+
+}
+

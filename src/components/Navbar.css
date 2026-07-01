@@ -2,87 +2,157 @@
   font-family: var(--font);
 }
 
-/* Mobile: fixed bottom tab bar */
+
+/* Bottom mobile navigation */
+
 .nav-bottom {
+
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-  z-index: 40;
+
+  bottom:0;
+  left:0;
+  right:0;
+
+
+  display:flex;
+
+  background:#090909;
+
+  border-top:1px solid #222;
+
+
+  padding:
+  10px
+  12px
+  calc(10px + env(safe-area-inset-bottom));
+
+
+  z-index:100;
+
 }
+
+
 
 .nav-bottom .nav-link {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 6px 0;
-  font-size: 0.7rem;
-  color: var(--text-faint);
-  border-radius: 10px;
+
+
+  flex:1;
+
+
+  display:flex;
+
+  flex-direction:column;
+
+  align-items:center;
+
+
+  gap:5px;
+
+
+  color:#777;
+
+
+  font-size:.7rem;
+
+
 }
 
-.nav-bottom .nav-link .nav-icon {
-  font-size: 1.15rem;
-}
+
 
 .nav-bottom .nav-link.active {
-  color: var(--text);
+
+  color:white;
+
 }
 
-/* Desktop: fixed sidebar */
+
+
+.nav-icon {
+
+  font-size:1.2rem;
+
+}
+
+
+
+
+
+/* Hide sidebar on mobile */
+
 .nav-sidebar {
-  display: none;
+
+  display:none;
+
 }
 
-@media (min-width: 768px) {
-  .nav-bottom {
-    display: none;
-  }
 
-  .nav-sidebar {
-    display: flex;
-    flex-direction: column;
-    width: 220px;
-    flex-shrink: 0;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    padding: 24px 14px;
-    gap: 4px;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-  }
 
-  .nav-sidebar .nav-brand {
-    font-weight: 600;
-    font-size: 1rem;
-    padding: 0 10px;
-    margin-bottom: 22px;
-  }
 
-  .nav-sidebar .nav-link {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    font-size: 0.9rem;
-    color: var(--text-soft);
-  }
 
-  .nav-sidebar .nav-link:hover {
-    background: var(--surface-2);
-    color: var(--text);
-  }
 
-  .nav-sidebar .nav-link.active {
-    background: var(--surface-2);
-    color: var(--text);
-  }
+/* Desktop sidebar */
+
+@media(min-width:768px){
+
+
+.nav-bottom {
+
+  display:none;
+
 }
+
+
+
+.nav-sidebar {
+
+
+  display:flex;
+
+
+  flex-direction:column;
+
+
+  width:220px;
+
+
+  height:100vh;
+
+
+  background:#090909;
+
+
+  border-right:1px solid #222;
+
+
+  padding:24px 14px;
+
+
+}
+
+
+.nav-sidebar .nav-brand {
+
+  color:white;
+
+  margin-bottom:20px;
+
+}
+
+
+
+.nav-sidebar .nav-link {
+
+
+  color:#aaa;
+
+
+  padding:10px;
+
+
+}
+
+
+
+}
+
+
