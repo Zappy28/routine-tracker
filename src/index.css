@@ -26,12 +26,52 @@
   box-sizing: border-box;
 }
 
-html, body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font);
-  -webkit-font-smoothing: antialiased;
+html,
+body,
+#root {
+
+  margin:0;
+
+  width:100%;
+
+  min-height:100%;
+
+  background:#090909;
+
+  color:var(--text);
+
+  font-family:var(--font);
+
+  -webkit-font-smoothing:antialiased;
+
+}
+
+
+body {
+
+  overflow-x:hidden;
+
+  overscroll-behavior:none;
+
+}
+
+
+
+#root {
+
+  min-height:100vh;
+
+  background:#090909;
+
+}
+
+
+.app-shell {
+
+  min-height:100vh;
+
+  background:#090909;
+
 }
 
 a { text-decoration: none; color: inherit; }
