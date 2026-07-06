@@ -106,9 +106,59 @@ margin-bottom:15px;
 
 
 
-.med-item{
+.med-item {
 
-margin-bottom:18px;
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:center;
+
+  gap:20px;
+
+  padding:14px 0;
+
+}
+
+.med-info {
+
+  flex:1;
+
+}
+
+.med-btn {
+
+  flex-shrink:0;
+
+  min-width:110px;
+
+  height:38px;
+
+
+  background:#151515;
+
+  border:1px solid #333;
+
+  border-radius:8px;
+
+
+  color:#ddd;
+
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+
+}
+
+.med-btn.taken {
+
+  border-color:#3d7a5e;
+
+  color:#3d7a5e;
 
 }
 

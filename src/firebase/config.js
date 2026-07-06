@@ -1,7 +1,6 @@
 import { initializeApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
-
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDcMInWptZfDOEiAgX71fiWgzHtdjJS3a0",
   authDomain: "routine-tracker-82e5c.firebaseapp.com",
@@ -12,7 +11,11 @@ const firebaseConfig = {
   measurementId: "G-17TFS0024E"
 };
 
-
 const app = initializeApp(firebaseConfig);
+
+export const auth = getAuth(app);
+
+// ADD THIS
+export const googleProvider = new GoogleAuthProvider();
 
 export default app;

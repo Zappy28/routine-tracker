@@ -1,4 +1,4 @@
-import {BrowserRouter, Routes, Route} from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Layout from "./components/Layout";
 
@@ -6,32 +6,60 @@ import Home from "./pages/Home";
 import History from "./pages/History";
 import Settings from "./pages/Settings";
 
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
-function App(){
+import ProtectedRoute from "./components/ProtectedRoute";
 
-return (
+function App() {
 
-<BrowserRouter>
+    return (
 
-<Layout>
+        <BrowserRouter>
 
-<Routes>
+            <Layout>
 
-<Route path="/" element={<Home/>}/>
+                <Routes>
 
-<Route path="/history" element={<History/>}/>
+                    <Route path="/login" element={<Login />} />
 
-<Route path="/settings" element={<Settings/>}/>
+                    <Route path="/register" element={<Register />} />
 
-</Routes>
+                    <Route
+                        path="/"
+                        element={
+                            <ProtectedRoute>
+                                <Home />
+                            </ProtectedRoute>
+                        }
+                    />
 
-</Layout>
+                    <Route
+                        path="/history"
+                        element={
+                            <ProtectedRoute>
+                                <History />
+                            </ProtectedRoute>
+                        }
+                    />
 
-</BrowserRouter>
+                    <Route
+                        path="/settings"
+                        element={
+                            <ProtectedRoute>
+                                <Settings />
+                            </ProtectedRoute>
+                        }
+                    />
 
-)
+                </Routes>
+
+            </Layout>
+
+        </BrowserRouter>
+
+    );
 
 }
-
 
 export default App;

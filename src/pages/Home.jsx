@@ -162,79 +162,41 @@ MEDICATION
 {
 meds.map(m=>(
 
-<div
-className="med-item"
-key={m.id}
->
+<div className="med-item" key={m.id}>
+
+  <div className="med-info">
+
+    <div className="med-name">
+      {m.name}
+    </div>
+
+    <div className="med-time">
+      {m.time}
+      {" · "}
+      {m.taken ? "Taken" : "Not logged"}
+    </div>
+
+  </div>
 
 
-<div className="med-top">
+  <button
+    className={
+      m.taken
+      ? "med-btn taken"
+      : "med-btn"
+    }
 
+    onClick={() => toggleMed(m.id)}
+  >
 
-<div>
+    {m.taken
+      ? "Taken"
+      : "Mark as taken"}
 
-<div className="med-name">
-{m.name}
-</div>
-
-
-<div className="med-time">
-
-{m.time}
-
-{" · "}
-
-{
-m.taken
-?
-"Taken"
-:
-"Not logged"
-}
-
-</div>
-
-
-</div>
-
+  </button>
 
 
 </div>
-
-
-
-<button
-
-className={
-m.taken
-?
-"med-btn taken"
-:
-"med-btn"
-}
-
-
-onClick={()=>
-toggleMed(m.id)
-}
-
->
-
-{
-m.taken
-?
-"Taken"
-:
-"Mark as taken"
-}
-
-
-</button>
-
-
-
-</div>
-
 
 ))
 
