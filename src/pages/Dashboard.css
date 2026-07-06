@@ -348,3 +348,89 @@ resize:none;
 
 
 }
+
+
+.add-medication{
+
+display:flex;
+gap:10px;
+margin-bottom:20px;
+flex-wrap:wrap;
+
+}
+
+.add-medication input{
+
+flex:1;
+min-width:180px;
+
+background:#151515;
+border:1px solid #333;
+border-radius:8px;
+
+padding:10px 12px;
+
+color:white;
+
+}
+
+.add-medication select{
+
+background:#151515;
+border:1px solid #333;
+border-radius:8px;
+
+padding:10px;
+color:white;
+
+}
+
+.add-med-btn{
+
+background:#3d7a5e;
+border:none;
+border-radius:8px;
+
+padding:10px 18px;
+
+color:white;
+cursor:pointer;
+
+}
+
+.add-med-btn:hover{
+
+background:#4a9673;
+
+}
+
+.med-actions{
+
+display:flex;
+align-items:center;
+gap:8px;
+
+}
+
+.delete-med-btn{
+
+width:36px;
+height:36px;
+
+background:none;
+
+border:1px solid #444;
+border-radius:8px;
+
+color:#b55;
+
+cursor:pointer;
+
+}
+
+.delete-med-btn:hover{
+
+border-color:#ff5555;
+color:#ff5555;
+
+}

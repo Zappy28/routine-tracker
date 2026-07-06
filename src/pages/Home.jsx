@@ -32,6 +32,8 @@ const [day] = useState(initialToday);
 
 const [meds,setMeds] =
 useState(initialMeds);
+const [newMedication, setNewMedication] = useState("");
+const [newMedicationTime, setNewMedicationTime] = useState("Morning");
 
 
 const [sleep,setSleep] =
@@ -85,6 +87,36 @@ taken:true
 :
 m
 ));
+
+}
+
+function addMedication() {
+
+  const name = newMedication.trim();
+
+  if (!name) return;
+
+  setMeds(prev => [
+    ...prev,
+    {
+      id: crypto.randomUUID(),
+      name,
+      time: newMedicationTime,
+      taken: false
+    }
+  ]);
+
+  setNewMedication("");
+  setNewMedicationTime("Morning");
+
+}
+
+
+function deleteMedication(id) {
+
+  setMeds(prev =>
+    prev.filter(m => m.id !== id)
+  );
 
 }
 
@@ -152,57 +184,87 @@ width:`${completion}%`
 
 <section>
 
-
 <h3>
-MEDICATION
+MEDICATIONS
 </h3>
 
+<div className="add-medication">
 
+    <input
+        type="text"
+        placeholder="Medication name"
+        value={newMedication}
+        onChange={(e)=>setNewMedication(e.target.value)}
+    />
+
+    <select
+        value={newMedicationTime}
+        onChange={(e)=>setNewMedicationTime(e.target.value)}
+    >
+        <option>Morning</option>
+        <option>Afternoon</option>
+        <option>Night</option>
+    </select>
+
+    <button
+        className="add-med-btn"
+        onClick={addMedication}
+    >
+        Add
+    </button>
+
+</div>
 
 {
-meds.map(m=>(
+meds.map(m => (
 
-<div className="med-item" key={m.id}>
+<div
+    className="med-item"
+    key={m.id}
+>
 
-  <div className="med-info">
+    <div className="med-info">
 
-    <div className="med-name">
-      {m.name}
+        <div className="med-name">
+            {m.name}
+        </div>
+
+        <div className="med-time">
+            {m.time}
+            {" · "}
+            {m.taken ? "Taken" : "Not logged"}
+        </div>
+
     </div>
 
-    <div className="med-time">
-      {m.time}
-      {" · "}
-      {m.taken ? "Taken" : "Not logged"}
+    <div className="med-actions">
+
+        <button
+            className={
+                m.taken
+                ? "med-btn taken"
+                : "med-btn"
+            }
+            onClick={() => toggleMed(m.id)}
+        >
+            {m.taken
+                ? "Taken"
+                : "Mark as taken"}
+        </button>
+
+        <button
+            className="delete-med-btn"
+            onClick={() => deleteMedication(m.id)}
+        >
+            ✕
+        </button>
+
     </div>
-
-  </div>
-
-
-  <button
-    className={
-      m.taken
-      ? "med-btn taken"
-      : "med-btn"
-    }
-
-    onClick={() => toggleMed(m.id)}
-  >
-
-    {m.taken
-      ? "Taken"
-      : "Mark as taken"}
-
-  </button>
-
 
 </div>
 
 ))
-
 }
-
-
 
 </section>
 
