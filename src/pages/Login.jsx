@@ -1,13 +1,11 @@
 import { useState } from "react";
 import {
     signInWithEmailAndPassword,
-    signInWithPopup
+    signInWithPopup,
 } from "firebase/auth";
-import {
-    auth,
-    googleProvider
-} from "../firebase/Config";
+import { auth, googleProvider } from "../firebase/Config";
 import { useNavigate, Link } from "react-router-dom";
+import "./Login.css";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -23,61 +21,71 @@ export default function Login() {
             await signInWithEmailAndPassword(auth, email, password);
             navigate("/");
         } catch {
-            setError("Invalid email or password.");
+            setError("Incorrect email or password.");
         }
     }
+
     async function handleGoogleLogin() {
-    try {
-        const result = await signInWithPopup(auth, googleProvider);
-
-        console.log(result.user);
-
-        navigate("/");
-    } catch (error) {
-        console.log(error);
-        console.log(error.code);
-        console.log(error.message);
-
-        alert(error.code);
+        try {
+            await signInWithPopup(auth, googleProvider);
+            navigate("/");
+        } catch (err) {
+            console.error(err);
+        }
     }
-}
 
     return (
-        <div className="page">
-            <h1>Login</h1>
+        <div className="login-page">
+            <div className="login-card">
 
-            <form onSubmit={handleLogin}>
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e)=>setEmail(e.target.value)}
-                />
+                <h1>Routine Tracker</h1>
+                <p>Track your habits. Improve every day.</p>
 
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e)=>setPassword(e.target.value)}
-                />
+                <form onSubmit={handleLogin}>
 
-                <button type="submit">
-                    Login
-                </button>
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e)=>setEmail(e.target.value)}
+                    />
+
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e)=>setPassword(e.target.value)}
+                    />
+
+                    <button className="login-btn">
+                        Login
+                    </button>
+
+                </form>
+
+                <div className="divider">
+                    <span>OR</span>
+                </div>
+
                 <button
-                    type="button"
+                    className="google-btn"
                     onClick={handleGoogleLogin}
                 >
+                    <img
+                        src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                        alt=""
+                    />
                     Continue with Google
                 </button>
 
-                {error && <p>{error}</p>}
-            </form>
+                {error && <p className="error">{error}</p>}
 
-            <p>
-                Don't have an account?{" "}
-                <Link to="/register">Register</Link>
-            </p>
+                <p className="bottom-text">
+                    Don't have an account?
+                    <Link to="/register"> Create one</Link>
+                </p>
+
+            </div>
         </div>
     );
 }
