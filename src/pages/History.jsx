@@ -1,59 +1,41 @@
+import { useState, useEffect } from "react";
 import Card from "../components/Card";
+import { auth } from "../firebase/Config";
+import { getHistory } from "../firebase/firestoreService";
 
-import { history } from "../data/mockData";
+function History() {
+  const [days, setDays] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    async function loadHistory() {
+      const uid = auth.currentUser?.uid;
+      if (!uid) return;
 
-function History(){
+      const data = await getHistory(uid);
+      setDays(data);
+      setLoading(false);
+    }
+    loadHistory();
+  }, []);
 
+  if (loading) return <p>Loading...</p>;
 
-return (
+  return (
+    <div>
+      <h1>History</h1>
 
-<div>
+      {days.length === 0 && <p>No entries yet — log something on the Home page.</p>}
 
-
-<h1>
-History
-</h1>
-
-
-
-{
-history.map((day,index)=>(
-
-
-<Card 
-key={index}
-title={day.date}
->
-
-
-<p>
-Medicine:
-{day.medicine ? "Taken" : "Missed"}
-</p>
-
-
-<p>
-Mood:
-{day.mood}/10
-</p>
-
-
-</Card>
-
-
-))
-
+      {days.map(day => (
+        <Card key={day.id} title={day.date}>
+          <p>Medicine: {Object.values(day.takenToday || {}).some(Boolean) ? "Taken" : "Not logged"}</p>
+          <p>Mood: {day.mood ? `${day.mood} / 5` : "Not logged"}</p>
+          <p>Weight: {day.weight ? `${day.weight} lbs` : "Not logged"}</p>
+        </Card>
+      ))}
+    </div>
+  );
 }
-
-
-
-</div>
-
-
-)
-
-}
-
 
 export default History;
