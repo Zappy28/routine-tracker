@@ -1,0 +1,16 @@
+{
+  "name": "Routine Tracker",
+  "short_name": "Routine",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#08090a",
+  "theme_color": "#08090a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

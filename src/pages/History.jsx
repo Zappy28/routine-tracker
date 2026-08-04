@@ -32,6 +32,8 @@ function History() {
           <p>Medicine: {Object.values(day.takenToday || {}).some(Boolean) ? "Taken" : "Not logged"}</p>
           <p>Mood: {day.mood ? `${day.mood} / 5` : "Not logged"}</p>
           <p>Weight: {day.weight ? `${day.weight} lbs` : "Not logged"}</p>
+          <p>Brain Fog: {day.brainFog ? `${day.brainFog} / 5` : "Not logged"}</p>
+          <p>Stress: {day.stress ? `${day.stress} / 5` : "Not logged"}</p>
         </Card>
       ))}
     </div>

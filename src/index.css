@@ -172,4 +172,30 @@ main {
   background:#090909;
 
 }
+html, body {
+  /* Kills the gray/blue flash box you get when tapping buttons/links on mobile */
+  -webkit-tap-highlight-color: transparent;
 
+  /* Stops the page from being pulled down like a browser tab (rubber-band bounce) */
+  overscroll-behavior-y: none;
+
+  /* Prevents accidental text selection when tapping UI elements repeatedly */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Notes textarea is the one place typing/selecting text should still work normally */
+.notes, input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+button, a {
+  /* Removes the 300ms tap delay and disables double-tap-to-zoom on individual controls */
+  touch-action: manipulation;
+}
+
+/* Respect the iPhone notch / home indicator on every edge, not just the bottom nav */
+#root {
+  padding-top: env(safe-area-inset-top);
+}

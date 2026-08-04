@@ -1,45 +1,55 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { auth } from "../firebase/Config";
-import {
-  saveDayEntry,
-  getDayEntry,
-  getDateKey,
-  saveMedications,
-  getMedications
-} from "../firebase/firestoreService";
+import { saveDayEntry, getDayEntry, getDateKey, getMedications } from "../firebase/firestoreService";
 import "./Dashboard.css";
+
+const LEVELS = ["Very Low", "Low", "Normal", "High", "Excellent"];
+
+function Segmented({ value, onChange }) {
+  return (
+    <div className="segmented">
+      {LEVELS.map((label, i) => (
+        <button
+          key={label}
+          className={value === i + 1 ? "seg-btn active" : "seg-btn"}
+          onClick={() => onChange(i + 1)}
+        >
+          {i + 1}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function Home() {
   const dateKey = getDateKey();
   const displayDate = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
     month: "long",
-    day: "numeric",
-    year: "numeric"
+    day: "numeric"
   });
 
-  const [medications, setMedications] = useState([]); // persistent list, starts empty
-  const [takenToday, setTakenToday] = useState({}); // { medId: true/false }
-  const [newMedication, setNewMedication] = useState("");
-  const [newMedicationTime, setNewMedicationTime] = useState("Morning");
-
+  const [medications, setMedications] = useState([]);
+  const [takenToday, setTakenToday] = useState({});
   const [sleep, setSleep] = useState(null);
   const [weight, setWeight] = useState(null);
   const [workout, setWorkout] = useState(false);
   const [mood, setMood] = useState(0);
   const [energy, setEnergy] = useState(0);
+  const [brainFog, setBrainFog] = useState(0);
+  const [stress, setStress] = useState(0);
   const [notes, setNotes] = useState("");
+  const [notesOpen, setNotesOpen] = useState(false);
 
   const [loading, setLoading] = useState(true);
-  const [saveStatus, setSaveStatus] = useState(""); // "", "saving", "saved"
+  const [saveState, setSaveState] = useState("idle"); // idle | saving | saved
+  const saveTimer = useRef(null);
+  const hasLoaded = useRef(false);
 
-  // Load everything on mount
   useEffect(() => {
     async function load() {
       const uid = auth.currentUser?.uid;
-      if (!uid) {
-        setLoading(false);
-        return;
-      }
+      if (!uid) { setLoading(false); return; }
 
       const [meds, dayData] = await Promise.all([
         getMedications(uid),
@@ -47,7 +57,6 @@ function Home() {
       ]);
 
       setMedications(meds);
-
       if (dayData) {
         setTakenToday(dayData.takenToday || {});
         setSleep(dayData.sleep ?? null);
@@ -55,255 +64,185 @@ function Home() {
         setWorkout(dayData.workout ?? false);
         setMood(dayData.mood ?? 0);
         setEnergy(dayData.energy ?? 0);
+        setBrainFog(dayData.brainFog ?? 0);
+        setStress(dayData.stress ?? 0);
         setNotes(dayData.notes ?? "");
       }
-
       setLoading(false);
+      hasLoaded.current = true;
     }
     load();
   }, [dateKey]);
 
-  const completed =
-    Object.values(takenToday).filter(Boolean).length +
-    (sleep ? 1 : 0) +
-    (weight ? 1 : 0) +
-    (workout ? 1 : 0) +
-    (mood ? 1 : 0) +
-    (energy ? 1 : 0);
-
-  const completion = Math.round(
-    (completed / Math.max(medications.length + 5, 1)) * 100
-  );
-
-  function toggleMed(id) {
-    setTakenToday(prev => ({ ...prev, [id]: !prev[id] }));
-  }
-
-  function addMedication() {
-    const name = newMedication.trim();
-    if (!name) return;
-
-    setMedications(prev => [
-      ...prev,
-      { id: crypto.randomUUID(), name, time: newMedicationTime }
-    ]);
-
-    setNewMedication("");
-    setNewMedicationTime("Morning");
-  }
-
-  function deleteMedication(id) {
-    setMedications(prev => prev.filter(m => m.id !== id));
-    setTakenToday(prev => {
-      const copy = { ...prev };
-      delete copy[id];
-      return copy;
-    });
-  }
-
-  async function handleSave() {
+  // Debounced auto-save — fires 700ms after the last change, never on initial load
+  useEffect(() => {
+    if (!hasLoaded.current) return;
     const uid = auth.currentUser?.uid;
     if (!uid) return;
 
-    setSaveStatus("saving");
+    setSaveState("saving");
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      await saveDayEntry(uid, dateKey, {
+        date: dateKey, takenToday, sleep, weight, workout,
+        mood, energy, brainFog, stress, notes
+      });
+      setSaveState("saved");
+    }, 700);
 
-    await Promise.all([
-      saveMedications(uid, medications),
-      saveDayEntry(uid, dateKey, {
-        date: dateKey,
-        takenToday,
-        sleep,
-        weight,
-        workout,
-        mood,
-        energy,
-        notes
-      })
-    ]);
+    return () => clearTimeout(saveTimer.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [takenToday, sleep, weight, workout, mood, energy, brainFog, stress, notes, dateKey]);
 
-    setSaveStatus("saved");
-    setTimeout(() => setSaveStatus(""), 2000);
-  }
+  const toggleMed = useCallback(id => {
+    setTakenToday(prev => ({ ...prev, [id]: !prev[id] }));
+  }, []);
 
-  if (loading) return <div className="routine-page">Loading...</div>;
+  const total = medications.length + 6; // meds + sleep, weight, workout, mood, energy, brainFog(stress optional)
+  const completed =
+    Object.values(takenToday).filter(Boolean).length +
+    (sleep ? 1 : 0) + (weight ? 1 : 0) + (workout ? 1 : 0) +
+    (mood ? 1 : 0) + (energy ? 1 : 0) + (brainFog ? 1 : 0);
+
+  const morningMeds = medications.filter(m => m.time !== "Night");
+  const eveningMeds = medications.filter(m => m.time === "Night");
+
+  if (loading) return <div className="routine-page" />;
 
   return (
     <div className="routine-page">
-      <header className="header">
-        <div className="day-label">{displayDate}</div>
+      <header className="hero">
+        <div className="hero-date">{displayDate}</div>
         <h1>Good morning.</h1>
+        <div className="hero-status">
+          {completed >= total ? "Everything logged" : `${completed} of ${total} logged`}
+        </div>
       </header>
 
-      <div className="completion-block">
-        <div className="completion-header">
-          <span>DAILY COMPLETION</span>
-          <b>{completion}%</b>
-        </div>
-        <div className="progress">
-          <div style={{ width: `${completion}%` }} />
-        </div>
-      </div>
+      <section className="group">
+        <h2 className="group-title">Today's Health</h2>
 
-      <div className="divider" />
-
-      <section>
-        <h3>MEDICATIONS</h3>
-
-        <div className="add-medication">
-          <input
-            type="text"
-            placeholder="Medication name"
-            value={newMedication}
-            onChange={(e) => setNewMedication(e.target.value)}
-          />
-          <select
-            value={newMedicationTime}
-            onChange={(e) => setNewMedicationTime(e.target.value)}
-          >
-            <option>Morning</option>
-            <option>Afternoon</option>
-            <option>Night</option>
-          </select>
-          <button className="add-med-btn" onClick={addMedication}>
-            Add
-          </button>
-        </div>
-
-        {medications.length === 0 && (
-          <p style={{ opacity: 0.6 }}>No medications added yet.</p>
-        )}
-
-        {medications.map(m => (
-          <div className="med-item" key={m.id}>
-            <div className="med-info">
-              <div className="med-name">{m.name}</div>
-              <div className="med-time">
-                {m.time} · {takenToday[m.id] ? "Taken" : "Not logged"}
-              </div>
-            </div>
-            <div className="med-actions">
-              <button
-                className={takenToday[m.id] ? "med-btn taken" : "med-btn"}
-                onClick={() => toggleMed(m.id)}
-              >
-                {takenToday[m.id] ? "Taken" : "Mark as taken"}
-              </button>
-              <button
-                className="delete-med-btn"
-                onClick={() => deleteMedication(m.id)}
-              >
-                ✕
-              </button>
-            </div>
+        <div className="metric-block">
+          <div className="metric-top">
+            <span className="metric-label">Sleep</span>
+            <span className="metric-value-lg">{sleep ? `${sleep}h` : "—"}</span>
           </div>
-        ))}
-      </section>
-
-      <div className="divider" />
-
-      <section>
-        <h3>SLEEP</h3>
-        <div className="metric-row">
-          <div>
-            <div className="metric-name">{sleep ? `${sleep}h` : "Not logged"}</div>
-            <div className="metric-sub">Duration</div>
-          </div>
-          <div className="stepper">
+          <div className="stepper-inline">
             <button onClick={() => setSleep(sleep ? sleep - 0.5 : 7.5)}>−</button>
-            <span>{sleep ? sleep + "h" : "--"}</span>
             <button onClick={() => setSleep(sleep ? sleep + 0.5 : 7.5)}>+</button>
           </div>
         </div>
-      </section>
 
-      <div className="divider" />
+        <div className="metric-block">
+          <span className="metric-label">Mood</span>
+          <Segmented value={mood} onChange={setMood} />
+        </div>
 
-      <section>
-        <h3>WEIGHT</h3>
-        <div className="metric-row">
-          <div>
-            <div className="metric-name">{weight ? `${weight} lbs` : "Not logged"}</div>
-            <div className="metric-sub">Today</div>
-          </div>
-          <div className="stepper">
-            <button onClick={() => setWeight(weight ? weight - 1 : 132)}>−</button>
-            <span>{weight ?? "--"}</span>
-            <button onClick={() => setWeight(weight ? weight + 1 : 132)}>+</button>
-          </div>
+        <div className="metric-block">
+          <span className="metric-label">Energy</span>
+          <Segmented value={energy} onChange={setEnergy} />
+        </div>
+
+        <div className="metric-block">
+          <span className="metric-label">Brain Fog</span>
+          <Segmented value={brainFog} onChange={setBrainFog} />
+        </div>
+
+        <div className="metric-block">
+          <span className="metric-label">Stress</span>
+          <Segmented value={stress} onChange={setStress} />
         </div>
       </section>
 
-      <div className="divider" />
+      <section className="group">
+        <h2 className="group-title">Body</h2>
 
-      <section>
-        <h3>ACTIVITY</h3>
-        <div className="metric-row">
-          <div>
-            <div className="metric-name">Workout</div>
-            <div className="metric-sub">{workout ? "Completed today" : "Not logged"}</div>
+        <div className="metric-block">
+          <div className="metric-top">
+            <span className="metric-label">Weight</span>
+            <span className="metric-value-lg">{weight ? `${weight} lbs` : "—"}</span>
           </div>
+          <div className="stepper-inline">
+            <button onClick={() => setWeight(weight ? weight - 1 : 132)}>−</button>
+            <button onClick={() => setWeight(weight ? weight + 1 : 132)}>+</button>
+          </div>
+        </div>
+
+        <div className="metric-row-flat">
+          <span className="metric-label">Exercise</span>
           <button
-            className={workout ? "workout done" : "workout"}
+            className={workout ? "toggle-pill done" : "toggle-pill"}
             onClick={() => setWorkout(!workout)}
           >
-            {workout ? "Edit" : "Log workout"}
+            {workout ? "Completed" : "Not logged"}
           </button>
         </div>
       </section>
 
-      <div className="divider" />
+      <section className="group">
+        <h2 className="group-title">Medication</h2>
 
-      <section>
-        <h3>WELLBEING</h3>
-        {[["Mood", mood, setMood], ["Energy", energy, setEnergy]].map(
-          ([name, value, setter]) => (
-            <div className="metric-row" key={name}>
-              <div>
-                <div className="metric-name">{name}</div>
-                <div className="metric-sub">{value ? `${value} / 5` : "Not logged"}</div>
+        {medications.length === 0 && (
+          <p className="empty-hint">No medications configured. Add them in Settings.</p>
+        )}
+
+        {morningMeds.length > 0 && (
+          <>
+            <div className="sub-label">Morning</div>
+            {morningMeds.map(m => (
+              <div className="metric-row-flat" key={m.id}>
+                <span className="metric-label">{m.name}</span>
+                <button
+                  className={takenToday[m.id] ? "toggle-pill done" : "toggle-pill"}
+                  onClick={() => toggleMed(m.id)}
+                >
+                  {takenToday[m.id] ? "Taken" : "Log"}
+                </button>
               </div>
-              <div className="dots">
-                {[1, 2, 3, 4, 5].map(n => (
-                  <button
-                    key={n}
-                    className={value === n ? "dot active" : "dot"}
-                    onClick={() => setter(n)}
-                  />
-                ))}
+            ))}
+          </>
+        )}
+
+        {eveningMeds.length > 0 && (
+          <>
+            <div className="sub-label">Evening</div>
+            {eveningMeds.map(m => (
+              <div className="metric-row-flat" key={m.id}>
+                <span className="metric-label">{m.name}</span>
+                <button
+                  className={takenToday[m.id] ? "toggle-pill done" : "toggle-pill"}
+                  onClick={() => toggleMed(m.id)}
+                >
+                  {takenToday[m.id] ? "Taken" : "Log"}
+                </button>
               </div>
-            </div>
-          )
+            ))}
+          </>
         )}
       </section>
 
-      <div className="divider" />
+      <section className="group notes-group">
+        {!notesOpen ? (
+          <button className="add-note-btn" onClick={() => setNotesOpen(true)}>
+            + Add note
+          </button>
+        ) : (
+          <>
+            <h2 className="group-title">Notes</h2>
+            <textarea
+              className="notes"
+              placeholder="Anything worth remembering today..."
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              autoFocus
+            />
+          </>
+        )}
+      </section>
 
-      <textarea
-        className="notes"
-        placeholder="Add a note for today..."
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-      />
-
-      <div className="divider" />
-
-      <button
-        className="save-btn"
-        onClick={handleSave}
-        disabled={saveStatus === "saving"}
-        style={{
-          width: "100%",
-          padding: "14px",
-          fontSize: "16px",
-          fontWeight: 600,
-          borderRadius: "10px",
-          border: "none",
-          cursor: "pointer",
-          marginTop: "8px"
-        }}
-      >
-        {saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved ✓" : "Save"}
-      </button>
+      <div className="save-indicator">
+        {saveState === "saving" ? "Saving…" : saveState === "saved" ? "Saved" : ""}
+      </div>
     </div>
   );
 }

@@ -1,0 +1,94 @@
+.settings-add-row {
+  display: flex;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.settings-input {
+  flex: 1;
+  min-width: 160px;
+  height: 42px;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 0 var(--sp-3);
+  color: var(--text-1);
+  font-size: 14px;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.settings-input::placeholder {
+  color: var(--text-4);
+}
+
+.settings-input:focus {
+  outline: none;
+  border-color: var(--line-strong);
+}
+
+.settings-select {
+  height: 42px;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 0 var(--sp-2);
+  color: var(--text-1);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.settings-add-btn {
+  height: 42px;
+  padding: 0 var(--sp-4);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--r-md);
+  color: #06120c;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), transform 100ms var(--ease);
+}
+
+.settings-add-btn:hover {
+  background: #5cc493;
+}
+
+.settings-add-btn:active {
+  transform: scale(0.97);
+}
+
+.settings-med-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--sp-3) 0;
+  border-top: 1px solid var(--line);
+}
+
+.settings-med-row:first-of-type {
+  border-top: none;
+}
+
+.settings-med-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-1);
+}
+
+.settings-delete-btn {
+  width: 36px;
+  height: 36px;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text-3);
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.settings-delete-btn:hover {
+  border-color: #ff5c5c;
+  color: #ff5c5c;
+}
