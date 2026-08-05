@@ -9,7 +9,7 @@
   flex: 1;
   min-width: 160px;
   height: 42px;
-  background: var(--bg-1);
+  background: var(--bg-2);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   padding: 0 var(--sp-3);
@@ -29,13 +29,22 @@
 
 .settings-select {
   height: 42px;
-  background: var(--bg-1);
+  background: var(--bg-2);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   padding: 0 var(--sp-2);
   color: var(--text-1);
   font-size: 14px;
   cursor: pointer;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.settings-select:hover {
+  border-color: var(--line-strong);
+}
+
+.settings-select-full {
+  width: 100%;
 }
 
 .settings-add-btn {
@@ -80,15 +89,19 @@
 .settings-delete-btn {
   width: 36px;
   height: 36px;
-  background: var(--bg-1);
+  background: var(--bg-2);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   color: var(--text-3);
   cursor: pointer;
-  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease), transform 100ms var(--ease);
 }
 
 .settings-delete-btn:hover {
   border-color: #ff5c5c;
   color: #ff5c5c;
+}
+
+.settings-delete-btn:active {
+  transform: scale(0.92);
 }

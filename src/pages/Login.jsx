@@ -5,6 +5,7 @@ import {
 } from "firebase/auth";
 import { auth, googleProvider } from "../firebase/Config";
 import { useNavigate, Link } from "react-router-dom";
+import { useLoadingBar } from "../context/useLoadingBar";
 import "./Login.css";
 
 export default function Login() {
@@ -13,24 +14,31 @@ export default function Login() {
     const [error, setError] = useState("");
 
     const navigate = useNavigate();
+    const { start, done } = useLoadingBar();
 
     async function handleLogin(e) {
         e.preventDefault();
 
+        start();
         try {
             await signInWithEmailAndPassword(auth, email, password);
             navigate("/");
         } catch {
             setError("Incorrect email or password.");
+        } finally {
+            done();
         }
     }
 
     async function handleGoogleLogin() {
+        start();
         try {
             await signInWithPopup(auth, googleProvider);
             navigate("/");
         } catch (err) {
             console.error(err);
+        } finally {
+            done();
         }
     }
 
@@ -38,7 +46,7 @@ export default function Login() {
         <div className="login-page">
             <div className="login-card">
 
-                <h1>Routine Tracker</h1>
+                <h1>Waypoint</h1>
                 <p>Track your habits. Improve every day.</p>
 
                 <form onSubmit={handleLogin}>

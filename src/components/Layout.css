@@ -1,0 +1,8 @@
+.page-fade {
+  animation: page-fade-in 220ms ease;
+}
+
+@keyframes page-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

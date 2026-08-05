@@ -9,11 +9,24 @@ import {
   orderBy,
   serverTimestamp
 } from "firebase/firestore";
+import { getStoredTimezone } from "../utils/timezone";
 
 // Use a normalized date key like "2026-08-03" instead of a display string,
 // so days sort correctly and never collide.
-export function getDateKey(date = new Date()) {
-  return date.toISOString().split("T")[0];
+//
+// Computed in a specific IANA timezone (the user's selected/detected zone by
+// default) rather than UTC — a previous version used `date.toISOString()`,
+// which always converts to UTC first. For anyone west of UTC that silently
+// rolled the date over to "tomorrow" in the evening, well before local
+// midnight (e.g. ~6-7pm in US Mountain time).
+export function getDateKey(date = new Date(), timeZone = getStoredTimezone()) {
+  // en-CA locale formats as YYYY-MM-DD, which is exactly the key shape we want.
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(date);
 }
 
 // --- Today's entry ---

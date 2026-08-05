@@ -25,9 +25,44 @@
   --text-3: #6b6d72;
   --text-4: #47484c;
 
-  --accent: #4fae82;
-  --accent-dim: rgba(79, 174, 130, 0.14);
-  --accent-line: rgba(79, 174, 130, 0.4);
+  /* Aston Martin-inspired palette: a bold, saturated green as the primary
+     accent (buttons, active states, checkmarks) paired with a much deeper
+     racing green for gradients/richer fills — plus a warm leather tone used
+     sparingly for a handful of "journal"-feeling surfaces (notes, bedtime). */
+  --accent: #22d38a;
+  --accent-dim: rgba(34, 211, 138, 0.14);
+  --accent-line: rgba(34, 211, 138, 0.4);
+
+  --accent-deep: #0d3b2e;
+  --accent-deep-line: rgba(13, 59, 46, 0.7);
+
+  --leather: #b17a3f;
+  --leather-dim: rgba(177, 122, 63, 0.14);
+  --leather-line: rgba(177, 122, 63, 0.4);
+
+  --warn: #fac775;
+  --warn-dim: rgba(250, 199, 117, 0.14);
+  --warn-line: rgba(250, 199, 117, 0.4);
+
+  --danger: #e24b4a;
+  --danger-dim: rgba(226, 75, 74, 0.14);
+  --danger-line: rgba(226, 75, 74, 0.4);
+
+  /* Overlay line colors, for charting multiple metrics at once (distinct from
+     --accent). Punchier/more saturated than a typical muted chart palette on
+     purpose, and prioritized toward the app's own green/leather-gold family
+     first — a saturated blue is still here as the third option, but pink is
+     gone entirely since it read as unrelated to the rest of the palette. */
+  --line-1: #22d38a;
+  --line-2: #f2b544;
+  --line-3: #3d8bef;
+
+  /* Material depth — a soft outer shadow plus a faint inset highlight along
+     the top edge, so raised surfaces read as physically lit rather than flat
+     painted rectangles. --shadow-card is for larger container-level surfaces
+     (cards), --shadow-raised for smaller interactive controls within them. */
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 10px 28px rgba(0, 0, 0, 0.32);
+  --shadow-raised: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 3px 10px rgba(0, 0, 0, 0.35);
 
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
   --dur: 170ms;
@@ -43,9 +78,40 @@
   min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
   -webkit-font-smoothing: antialiased;
-  padding-bottom: var(--sp-6);
+  /* Clears the floating bottom-nav pill (its own height + inset margin + safe area). */
+  padding-bottom: calc(var(--sp-6) + 46px + env(safe-area-inset-bottom));
   max-width: 480px;
   margin: 0 auto;
+  /* Own stacking context so all real content paints above the fixed .ambient-glow
+     (z-index:0), regardless of DOM order. */
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 768px) {
+  .routine-page {
+    padding-bottom: var(--sp-6);
+  }
+}
+
+/* ---------- Grain overlay ---------- */
+/* A very subtle noise texture over the whole page, generated procedurally via
+   SVG feTurbulence (no image asset to load/ship). This is the same technique
+   Stripe/Linear/Vercel use to kill the "flat CSS gradient" plastic look on
+   dark UI — without it, gradients/blurs read as digitally smooth in a way
+   that's an instant "this is a website" tell. Applies to every page that uses
+   .routine-page, not just Home, so the material feels consistent app-wide. */
+
+.routine-page::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
 }
 
 /* ---------- Hero ---------- */
@@ -78,11 +144,133 @@
   letter-spacing: -0.005em;
 }
 
+.hero-centered {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-centered .progress-ring-wrap {
+  margin: var(--sp-3) auto var(--sp-2);
+}
+
+/* ---------- Ambient glow ---------- */
+/* Two soft, blurred color blobs drifting slowly behind the page. Kept small
+   and moderately blurred (not full-bleed, not a huge radius) so the effect
+   stays cheap to render. Colors come from --tier-color-1/2, set per page
+   based on time of day (see utils/timeOfDay.js). */
+
+.ambient-glow {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-blob {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  filter: blur(64px);
+  opacity: 0.28;
+  will-change: transform;
+  animation: blob-drift 24s ease-in-out infinite alternate;
+}
+
+.ambient-blob.blob-1 {
+  top: -90px;
+  left: -70px;
+  background: var(--tier-color-1);
+}
+
+.ambient-blob.blob-2 {
+  top: 140px;
+  right: -110px;
+  background: var(--tier-color-2);
+  animation-delay: -9s;
+  animation-duration: 28s;
+}
+
+@keyframes blob-drift {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(26px, 18px) scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-blob {
+    animation: none;
+  }
+}
+
+/* ---------- Progress ring ---------- */
+
+.progress-ring-wrap {
+  position: relative;
+  width: 68px;
+  height: 68px;
+}
+
+.progress-ring-track {
+  stroke: var(--line);
+}
+
+.progress-ring-fill {
+  /* stroke color comes from the SVG's own linearGradient (deep racing green
+     to bold accent green) — not set here, so it isn't overridden by CSS. */
+  transition: stroke-dashoffset 600ms var(--ease);
+}
+
+.progress-ring-fill.complete {
+  filter: drop-shadow(0 0 5px var(--accent-dim));
+}
+
+.progress-ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  gap: 1px;
+}
+
+.progress-ring-value {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-ring-total {
+  font-size: 11px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Sleep time-wheel row ---------- */
+
+.time-wheel-row {
+  display: flex;
+  gap: var(--sp-4);
+  justify-content: center;
+  margin-top: var(--sp-2);
+}
+
 /* ---------- Groups ---------- */
 
 .group {
   padding: var(--sp-4);
-  border-top: 1px solid var(--line);
+  margin: 0 var(--sp-4) var(--sp-3);
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.group:last-of-type {
+  margin-bottom: var(--sp-4);
 }
 
 .group-title {
@@ -136,23 +324,25 @@
 .stepper-inline button {
   flex: 1;
   height: 44px;
-  background: var(--bg-1);
+  background: var(--bg-2);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   color: var(--text-1);
   font-size: 17px;
   font-weight: 400;
   cursor: pointer;
+  box-shadow: var(--shadow-raised);
   transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), transform 100ms var(--ease);
 }
 
 .stepper-inline button:hover {
-  background: var(--bg-2);
+  background: var(--bg-3);
   border-color: var(--line-strong);
 }
 
 .stepper-inline button:active {
   background: var(--bg-3);
+  box-shadow: none;
   transform: scale(0.97);
 }
 
@@ -163,17 +353,41 @@
 }
 
 /* ---------- Segmented control ---------- */
+/* Sliding pill driven by --seg-count/--seg-index custom props set inline by
+   the rendering component, so no JS measurement/refs are needed. */
 
 .segmented {
+  position: relative;
   display: flex;
   gap: 3px;
-  background: var(--bg-1);
+  background: var(--bg-2);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   padding: 3px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 2px 6px rgba(0, 0, 0, 0.25) inset;
+}
+
+.segmented::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / var(--seg-count, 2));
+  transform: translateX(calc(var(--seg-index, 0) * 100%));
+  background: var(--bg-3);
+  border-radius: 7px;
+  box-shadow: var(--shadow-raised);
+  transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
+}
+
+.segmented-empty::before {
+  opacity: 0;
 }
 
 .seg-btn {
+  position: relative;
+  z-index: 1;
   flex: 1;
   height: 34px;
   background: transparent;
@@ -184,15 +398,18 @@
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
-  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+  transition: color var(--dur) var(--ease), transform 100ms var(--ease);
 }
 
 .seg-btn:hover {
   color: var(--text-2);
 }
 
+.seg-btn:active {
+  transform: scale(0.96);
+}
+
 .seg-btn.active {
-  background: var(--bg-3);
   color: var(--accent);
 }
 
@@ -229,12 +446,13 @@
   min-width: 84px;
   height: 32px;
   border-radius: 16px;
-  background: var(--bg-1);
+  background: var(--bg-2);
   border: 1px solid var(--line);
   color: var(--text-3);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
+  box-shadow: var(--shadow-raised);
   transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease), transform 100ms var(--ease);
 }
 
@@ -251,6 +469,13 @@
   background: var(--accent-dim);
   border-color: var(--accent-line);
   color: var(--accent);
+  animation: toggle-pop 220ms var(--ease);
+}
+
+@keyframes toggle-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.06); }
+  100% { transform: scale(1); }
 }
 
 .toggle-pill:focus-visible {
@@ -279,17 +504,22 @@
   font-weight: 500;
   padding: 0;
   cursor: pointer;
-  transition: color var(--dur) var(--ease);
+  transition: color var(--dur) var(--ease), transform 100ms var(--ease);
 }
 
 .add-note-btn:hover {
   color: var(--text-2);
 }
 
+.add-note-btn:active {
+  transform: scale(0.96);
+}
+
 .notes {
   width: 100%;
-  background: var(--bg-1);
+  background: var(--bg-2);
   border: 1px solid var(--line);
+  border-left: 2px solid var(--leather-line);
   border-radius: var(--r-md);
   padding: var(--sp-3);
   color: var(--text-1);
@@ -299,7 +529,14 @@
   line-height: 1.5;
   font-family: inherit;
   margin-top: var(--sp-2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) inset;
   transition: border-color var(--dur) var(--ease);
+  animation: notes-open 200ms var(--ease);
+}
+
+@keyframes notes-open {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .notes::placeholder {
@@ -322,4 +559,32 @@
   min-height: 20px;
   letter-spacing: 0.02em;
   transition: opacity 220ms var(--ease);
+}
+
+/* ---------- Skeleton loading placeholders ---------- */
+
+.skel {
+  background: linear-gradient(90deg, var(--bg-1) 25%, var(--bg-2) 37%, var(--bg-1) 63%);
+  background-size: 400% 100%;
+  animation: skel-shimmer 1.4s ease infinite;
+  border-radius: var(--r-sm);
+}
+
+@keyframes skel-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* ---------- Staggered list entrance ---------- */
+/* Pair with an inline `animationDelay` (e.g. `${Math.min(i * 30, 300)}ms`)
+   on each item so a list cascades in instead of appearing all at once. */
+
+.stagger-in {
+  opacity: 0;
+  animation: stagger-in-kf 320ms var(--ease) forwards;
+}
+
+@keyframes stagger-in-kf {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }

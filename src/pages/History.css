@@ -1,0 +1,638 @@
+/* History page — Trends + Days views. Reuses tokens/classes from Dashboard.css
+   (.routine-page, .hero, .group, .group-title, .segmented, .seg-btn, .empty-hint). */
+
+/* ---------- Chip rows (shared: metric chips, filter chips) ---------- */
+
+.chip-row {
+  display: flex;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  padding-bottom: 2px;
+  margin-bottom: var(--sp-3);
+  scrollbar-width: none;
+}
+
+.chip-row::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  color: var(--text-3);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease), transform 100ms var(--ease);
+}
+
+.chip:hover {
+  color: var(--text-2);
+  border-color: var(--line-strong);
+}
+
+.chip:active {
+  transform: scale(0.94);
+}
+
+.chip.active {
+  background: var(--accent-dim);
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+
+.chip.chip-line-1.active {
+  background: rgba(34, 211, 138, 0.14);
+  border-color: rgba(34, 211, 138, 0.4);
+  color: var(--line-1);
+}
+
+.chip.chip-line-2.active {
+  background: rgba(242, 181, 68, 0.14);
+  border-color: rgba(242, 181, 68, 0.4);
+  color: var(--line-2);
+}
+
+.chip.chip-line-3.active {
+  background: rgba(61, 139, 239, 0.14);
+  border-color: rgba(61, 139, 239, 0.4);
+  color: var(--line-3);
+}
+
+/* ---------- Trends: chart ---------- */
+
+.trend-chart-wrap {
+  width: 100%;
+  overflow: visible;
+  margin-bottom: var(--sp-4);
+}
+
+.trend-chart-empty {
+  padding: var(--sp-5) 0;
+  text-align: center;
+}
+
+.band-label {
+  font-size: 8px;
+  fill: var(--text-4);
+}
+
+/* Chart "draws itself in" — the dasharray is deliberately larger than any
+   realistic path length so the line always fully reveals by the animation end. */
+.chart-line-draw {
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  animation: chart-draw-in 700ms var(--ease) forwards;
+}
+
+@keyframes chart-draw-in {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ---------- Trends: range selector ---------- */
+
+.range-row {
+  display: flex;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+.range-btn {
+  flex: 1;
+  height: 30px;
+  border-radius: var(--r-sm);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease), transform 100ms var(--ease);
+}
+
+.range-btn:hover {
+  color: var(--text-2);
+}
+
+.range-btn:active {
+  transform: scale(0.95);
+}
+
+.range-btn.active {
+  background: var(--bg-3);
+  border-color: var(--line-strong);
+  color: var(--text-1);
+}
+
+/* ---------- Trends: insight card ---------- */
+
+.insight-card {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--sp-3) var(--sp-3);
+}
+
+.insight-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  margin-bottom: var(--sp-1);
+}
+
+.insight-body {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+/* ---------- Days: month nav ---------- */
+
+.month-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--sp-3);
+}
+
+.month-nav-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.month-nav-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.month-nav-btn {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), transform 100ms var(--ease);
+}
+
+.month-nav-btn:hover {
+  background: var(--bg-3);
+  border-color: var(--line-strong);
+}
+
+.month-nav-btn:active {
+  transform: scale(0.92);
+}
+
+.legend-hint {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* ---------- Days: calendar grid ---------- */
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: var(--sp-4);
+}
+
+.cal-dow {
+  font-size: 10px;
+  color: var(--text-4);
+  text-align: center;
+  padding-bottom: 2px;
+}
+
+.cal-cell {
+  aspect-ratio: 1;
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+  cursor: pointer;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), transform 100ms var(--ease);
+}
+
+.cal-cell:hover {
+  border-color: var(--line-strong);
+}
+
+.cal-cell:active {
+  transform: scale(0.94);
+}
+
+.cal-cell.empty {
+  visibility: hidden;
+  cursor: default;
+}
+
+.cal-cell.selected {
+  color: var(--text-1);
+  box-shadow: 0 0 0 1.5px var(--text-1) inset;
+}
+
+/* ---------- Days: detail panel ---------- */
+
+.day-detail {
+  border-top: 1px solid var(--line);
+  padding-top: var(--sp-4);
+  animation: page-fade-in 220ms ease;
+}
+
+.day-detail-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.day-detail-title {
+  font-weight: 400;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  color: var(--text-1);
+  margin-bottom: var(--sp-3);
+}
+
+.day-detail-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.day-edit-btn {
+  flex-shrink: 0;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), transform 100ms var(--ease);
+}
+
+.day-edit-btn:hover {
+  background: var(--bg-3);
+  border-color: var(--line-strong);
+}
+
+.day-edit-btn:active {
+  transform: scale(0.95);
+}
+
+/* ---------- Day editor (backfill/correct a past day) ---------- */
+
+.day-editor {
+  animation: page-fade-in 220ms ease;
+}
+
+.editor-actions {
+  display: flex;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+}
+
+.editor-save-btn {
+  flex: 1;
+  height: 44px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--r-md);
+  color: #06120c;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-raised);
+  transition: background var(--dur) var(--ease), transform 100ms var(--ease);
+}
+
+.editor-save-btn:hover {
+  background: #5cc493;
+}
+
+.editor-save-btn:active {
+  transform: scale(0.98);
+}
+
+.editor-save-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+
+.editor-cancel-btn {
+  flex: 1;
+  height: 44px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), transform 100ms var(--ease);
+}
+
+.editor-cancel-btn:hover {
+  background: var(--bg-3);
+}
+
+.editor-cancel-btn:active {
+  transform: scale(0.98);
+}
+
+.editor-cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+
+.day-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+
+.day-stat-card {
+  background: var(--bg-2);
+  border-radius: var(--r-sm);
+  padding: var(--sp-2);
+}
+
+.day-stat-label {
+  font-size: 10px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.day-stat-value {
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--text-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.day-stat-card.positive {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-line);
+}
+
+.day-stat-card.positive .day-stat-label,
+.day-stat-card.positive .day-stat-value {
+  color: var(--accent);
+}
+
+.day-med-list {
+  margin-bottom: var(--sp-3);
+}
+
+.day-med-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--sp-2) var(--sp-2);
+  background: var(--bg-2);
+  border-radius: var(--r-sm);
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.day-med-row:last-child {
+  margin-bottom: 0;
+}
+
+.day-med-name {
+  color: var(--text-2);
+}
+
+.day-med-status {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.day-med-status.taken {
+  color: var(--accent);
+}
+
+.day-med-status.missed {
+  color: var(--danger);
+}
+
+.day-notes-block {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-1);
+  background: var(--bg-2);
+  border-left: 2px solid var(--leather-line);
+  padding: var(--sp-3) var(--sp-3);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+}
+
+/* ---------- Trends: axis captions + smoothing toggle ---------- */
+
+.axis-caption-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--sp-3);
+}
+
+.metric-detail-axis-label {
+  font-size: 10px;
+  color: var(--text-4);
+  font-variant-numeric: tabular-nums;
+}
+
+.smooth-toggle {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text-3);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease), transform 100ms var(--ease);
+}
+
+.smooth-toggle:hover {
+  color: var(--text-2);
+  border-color: var(--line-strong);
+}
+
+.smooth-toggle:active {
+  transform: scale(0.94);
+}
+
+/* ---------- Trends: tap-to-inspect card ---------- */
+
+.trend-inspect-card {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+
+.trend-inspect-date {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: var(--sp-2);
+}
+
+.trend-inspect-value {
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--text-1);
+  margin-bottom: var(--sp-1);
+}
+
+.trend-inspect-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 3px 0;
+}
+
+.trend-inspect-meds {
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: var(--sp-2);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- Trends: per-metric summary list ---------- */
+
+.trend-summary-list {
+  border-top: 1px solid var(--line);
+  padding-top: var(--sp-2);
+  margin-top: var(--sp-4);
+}
+
+.trend-summary-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  cursor: pointer;
+  border-bottom: 1px solid var(--line);
+  transition: background var(--dur) var(--ease), transform 100ms var(--ease);
+}
+
+.trend-summary-row:last-child {
+  border-bottom: none;
+}
+
+.trend-summary-row:hover {
+  background: var(--bg-2);
+}
+
+.trend-summary-row:active {
+  transform: scale(0.99);
+}
+
+.trend-summary-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.trend-summary-sparkline {
+  width: 64px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.trend-summary-value {
+  font-size: 13px;
+  color: var(--text-1);
+  font-variant-numeric: tabular-nums;
+  min-width: 44px;
+  text-align: right;
+}
+
+.trend-delta {
+  font-size: 11px;
+  min-width: 14px;
+  text-align: center;
+}
+
+.trend-delta.up {
+  color: var(--accent);
+}
+
+.trend-delta.down {
+  color: var(--danger);
+}
+
+.trend-delta.flat {
+  color: var(--text-4);
+}
+
+/* ---------- Metric detail view ---------- */
+
+.metric-detail-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+  animation: page-fade-in 220ms ease;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0;
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), transform 100ms var(--ease);
+}
+
+.back-btn:hover {
+  color: var(--text-1);
+}
+
+.back-btn:active {
+  transform: scale(0.94) translateX(-1px);
+}
+
+.metric-detail-title-text {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text-1);
+}
+
+@keyframes page-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

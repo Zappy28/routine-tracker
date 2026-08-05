@@ -3,69 +3,153 @@
 }
 
 
-/* Bottom mobile navigation */
+/* Bottom mobile navigation — floating "liquid glass" pill */
 
 .nav-bottom {
+  --nav-glass-bg: rgba(10, 11, 12, 0.72);
+
   position: fixed;
-  bottom: 0;
   left: 0;
   right: 0;
+  bottom: 0;
 
   display: flex;
+  justify-content: center;
 
-  background: rgba(9, 9, 9, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-
-  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  padding: 0 14px calc(10px + env(safe-area-inset-bottom));
 
   z-index: 100;
+  pointer-events: none;
+}
+
+.nav-bottom-glass {
+  position: relative;
+  display: flex;
+  width: 100%;
+  max-width: 420px;
+
+  background: var(--nav-glass-bg);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+
+  padding: 6px;
+
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+
+  pointer-events: auto;
+}
+
+/* Thin specular highlight along the top edge — cheap fake-refraction, no
+   extra rendering cost beyond a single gradient layer. */
+.nav-bottom-glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 40%);
+  pointer-events: none;
+}
+
+/* Sliding highlight behind the active tab, driven by --nav-count/--nav-index
+   custom props set inline (same pattern as .segmented). A back-out easing
+   curve gives it a slight overshoot/bounce instead of a linear slide. */
+.nav-bottom-glass::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  width: calc((100% - 12px) / var(--nav-count, 3));
+  transform: translateX(calc(var(--nav-index, 0) * 100%));
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  transition: transform 480ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
 }
 
 .nav-bottom .nav-link {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   color: #6b6d72;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 500;
-  padding: 6px 0;
-  border-radius: 10px;
-  transition: color 170ms ease, transform 100ms ease;
+  padding: 7px 0 6px;
+  border-radius: 20px;
+  transition: color 200ms ease, transform 480ms cubic-bezier(0.34, 1.56, 0.64, 1);
   -webkit-tap-highlight-color: transparent;
 }
 
 .nav-bottom .nav-link:active {
-  transform: scale(0.94);
+  transform: scale(0.9);
 }
 
 .nav-bottom .nav-link.active {
-  color: #f5f5f6;
+  /* Bold white rather than the app's accent color, by request — reads as a
+     more neutral/premium "selected" state distinct from the accent's use
+     elsewhere for positive/completed states. */
+  color: #ffffff;
+}
+
+.nav-label {
+  transition: opacity 170ms ease;
+}
+
+/* ---------- Icon outline/filled cross-fade ---------- */
+
+.nav-icon-swap {
+  position: relative;
+  display: block;
+  width: 23px;
+  height: 23px;
+  transition: transform 480ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.nav-bottom .nav-link.active .nav-icon-swap {
+  transform: scale(1.1) translateY(-1px);
+}
+
+.icon-outline,
+.icon-filled {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.icon-outline {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.icon-filled {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.nav-bottom .nav-link.active .icon-outline {
+  opacity: 0;
+  transform: scale(1.15);
+}
+
+.nav-bottom .nav-link.active .icon-filled {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .nav-icon {
-  font-size: 1.15rem;
-  transition: transform 170ms ease;
+  font-size: 1.2rem;
 }
-
-.nav-bottom .nav-link.active .nav-icon {
-  transform: translateY(-1px);
-}
-
-
-
-.nav-icon {
-
-  font-size:1.2rem;
-
-}
-
-
-
 
 
 /* Hide sidebar on mobile */
@@ -75,10 +159,6 @@
   display:none;
 
 }
-
-
-
-
 
 
 /* Desktop sidebar */
@@ -145,5 +225,4 @@
 
 
 }
-
 

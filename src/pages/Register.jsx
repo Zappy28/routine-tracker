@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase/Config";
 import { useNavigate, Link } from "react-router-dom";
+import { useLoadingBar } from "../context/useLoadingBar";
 
 export default function Register() {
 
@@ -9,18 +10,24 @@ export default function Register() {
     const [password,setPassword] = useState("");
 
     const navigate = useNavigate();
+    const { start, done } = useLoadingBar();
 
     async function handleRegister(e){
 
         e.preventDefault();
 
-        await createUserWithEmailAndPassword(
-            auth,
-            email,
-            password
-        );
+        start();
+        try {
+            await createUserWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
 
-        navigate("/");
+            navigate("/");
+        } finally {
+            done();
+        }
     }
 
     return (

@@ -48,6 +48,15 @@
     outline:2px solid #4e8cff;
 }
 
+.login-card{
+    animation: login-card-in 260ms ease;
+}
+
+@keyframes login-card-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .login-btn{
     background:#4e8cff;
     color:white;
@@ -57,11 +66,15 @@
     font-size:16px;
     font-weight:600;
     cursor:pointer;
-    transition:.2s;
+    transition: background .2s, transform 100ms ease;
 }
 
 .login-btn:hover{
     background:#3b7cff;
+}
+
+.login-btn:active{
+    transform: scale(0.98);
 }
 
 .divider{
@@ -97,6 +110,11 @@
     cursor:pointer;
     font-size:15px;
     font-weight:600;
+    transition: transform 100ms ease;
+}
+
+.google-btn:active{
+    transform: scale(0.98);
 }
 
 .google-btn img{
@@ -118,4 +136,13 @@
     margin-top:16px;
     color:#ff6b6b;
     text-align:center;
+    animation: error-shake 320ms ease;
+}
+
+@keyframes error-shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(2px); }
 }

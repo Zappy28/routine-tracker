@@ -1,0 +1,36 @@
+.loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 300;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+}
+
+.loading-bar.active {
+  opacity: 1;
+}
+
+.loading-bar-fill {
+  position: absolute;
+  top: 0;
+  left: -40%;
+  height: 100%;
+  width: 40%;
+  background: var(--accent, #22d38a);
+  border-radius: 2px;
+}
+
+.loading-bar.active .loading-bar-fill {
+  animation: loading-bar-sweep 1.1s ease-in-out infinite;
+}
+
+@keyframes loading-bar-sweep {
+  0% { left: -40%; }
+  60% { left: 100%; }
+  100% { left: 100%; }
+}
