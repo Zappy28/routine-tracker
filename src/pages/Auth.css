@@ -1,0 +1,292 @@
+/* Shared styling for the signed-out pages (Login + Register). Built entirely
+   on the Dashboard.css design tokens so the auth flow matches the rest of the
+   app — the previous version used its own hardcoded palette (blue button,
+   off-brand grays) that predated the current green/leather system. */
+
+.auth-page {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+  background: var(--bg-0);
+  color: var(--text-1);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Same procedural grain as .routine-page, so the material reads consistently
+   from the login screen through to the app itself. */
+.auth-page::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+.auth-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--sp-5) var(--sp-4) var(--sp-4);
+  box-shadow: var(--shadow-card);
+  animation: auth-card-in 300ms var(--ease);
+}
+
+@keyframes auth-card-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Brand ---------- */
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: var(--sp-4);
+}
+
+.auth-brand-text {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-1);
+}
+
+.auth-card h1 {
+  text-align: center;
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 var(--sp-2);
+  color: var(--text-1);
+}
+
+.auth-sub {
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-3);
+  margin: 0 0 var(--sp-5);
+}
+
+/* ---------- Form ---------- */
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.auth-input {
+  width: 100%;
+  height: 46px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 0 var(--sp-3);
+  color: var(--text-1);
+  font-size: 15px;
+  font-family: inherit;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) inset;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.auth-input::placeholder {
+  color: var(--text-4);
+}
+
+.auth-input:hover {
+  border-color: var(--line-strong);
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: var(--accent-line);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) inset, 0 0 0 3px var(--accent-dim);
+}
+
+.auth-submit {
+  height: 46px;
+  margin-top: var(--sp-1);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--r-md);
+  color: #06120c;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  box-shadow: var(--shadow-raised);
+  transition: background var(--dur) var(--ease), transform 100ms var(--ease);
+}
+
+.auth-submit:hover {
+  background: #3ae2a0;
+}
+
+.auth-submit:active {
+  transform: scale(0.98);
+}
+
+.auth-submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+
+/* ---------- Divider ---------- */
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: var(--sp-4) 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.auth-divider span {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-4);
+}
+
+/* ---------- Google ---------- */
+
+.auth-google-btn {
+  width: 100%;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text-1);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow-raised);
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), transform 100ms var(--ease);
+}
+
+.auth-google-btn:hover {
+  background: var(--bg-3);
+  border-color: var(--line-strong);
+}
+
+.auth-google-btn:active {
+  transform: scale(0.98);
+}
+
+.auth-google-btn img {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ---------- Error + footer ---------- */
+
+.auth-error {
+  margin: var(--sp-3) 0 0;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--danger-dim);
+  border: 1px solid var(--danger-line);
+  border-radius: var(--r-sm);
+  color: var(--danger);
+  font-size: 13px;
+  text-align: center;
+  animation: auth-error-shake 320ms ease;
+}
+
+@keyframes auth-error-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
+.auth-footer {
+  margin: var(--sp-4) 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+.auth-footer a {
+  color: var(--accent);
+  font-weight: 500;
+  transition: color var(--dur) var(--ease);
+}
+
+.auth-footer a:hover {
+  color: #3ae2a0;
+}
+
+/* ---------- Responsive ---------- */
+
+/* Roomier card once there's vertical space to spare for it. */
+@media (min-width: 480px) and (min-height: 700px) {
+  .auth-card {
+    padding: var(--sp-6) var(--sp-5) var(--sp-5);
+  }
+
+  .auth-card h1 {
+    font-size: 28px;
+  }
+}
+
+/* Short/landscape phones: top-align so the card can scroll rather than being
+   vertically centered and clipped. */
+@media (max-height: 640px) {
+  .auth-page {
+    align-items: flex-start;
+    padding-top: var(--sp-4);
+    padding-bottom: var(--sp-4);
+  }
+}
+
+@media (min-width: 768px) {
+  .auth-card {
+    max-width: 420px;
+  }
+}

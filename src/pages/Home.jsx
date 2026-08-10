@@ -1,14 +1,19 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { auth } from "../firebase/Config";
-import { saveDayEntry, getDayEntry, getDateKey, getMedications } from "../firebase/firestoreService";
+import {
+  saveDayEntry, getDayEntry, getDateKey, getMedications, getMetrics
+} from "../firebase/firestoreService";
 import { useLoadingBar } from "../context/useLoadingBar";
 import Skeleton from "../components/Skeleton";
 import ProgressRing from "../components/ProgressRing";
 import TimeWheel from "../components/TimeWheel";
-import Segmented from "../components/Segmented";
+import MetricInput from "../components/MetricInput";
 import AmbientGlow from "../components/AmbientGlow";
 import { getTimeTier, getGreeting, TIER_COLORS } from "../utils/timeOfDay";
 import { getStoredTimezone } from "../utils/timezone";
+import {
+  readDayValues, isMetricLogged, seedDefaultMetrics, sortMetrics
+} from "../utils/metrics";
 import {
   DEFAULT_BED_MINUTES,
   DEFAULT_WAKE_MINUTES,
@@ -31,16 +36,14 @@ function Home() {
   const [tierColor1, tierColor2] = TIER_COLORS[tier];
 
   const [medications, setMedications] = useState([]);
+  const [metrics, setMetrics] = useState([]);
   const [takenToday, setTakenToday] = useState({});
   const [bedMinutes, setBedMinutes] = useState(DEFAULT_BED_MINUTES);
   const [wakeMinutes, setWakeMinutes] = useState(DEFAULT_WAKE_MINUTES);
   const [sleepTouched, setSleepTouched] = useState(false);
-  const [weight, setWeight] = useState(null);
-  const [workout, setWorkout] = useState(false);
-  const [mood, setMood] = useState(0);
-  const [energy, setEnergy] = useState(0);
-  const [brainFog, setBrainFog] = useState(0);
-  const [stress, setStress] = useState(0);
+  // One bag of metric values keyed by metric id, instead of a useState per
+  // hardcoded field — this is what lets the metric list be user-defined.
+  const [values, setValues] = useState({});
   const [notes, setNotes] = useState("");
   const [notesOpen, setNotesOpen] = useState(false);
 
@@ -56,12 +59,17 @@ function Home() {
       if (!uid) { setLoading(false); return; }
 
       start();
-      const [meds, dayData] = await Promise.all([
+      const [meds, userMetrics, dayData] = await Promise.all([
         getMedications(uid),
+        getMetrics(uid),
         getDayEntry(uid, dateKey)
       ]);
 
       setMedications(meds);
+      // An account that predates custom metrics has no list yet — fall back to
+      // the original seven so nothing disappears for existing users.
+      setMetrics(sortMetrics(userMetrics?.length ? userMetrics : seedDefaultMetrics()));
+
       if (dayData) {
         setTakenToday(dayData.takenToday || {});
         if (dayData.bedMinutes != null && dayData.wakeMinutes != null) {
@@ -74,12 +82,8 @@ function Home() {
           setBedMinutes(deriveBedMinutesFromHours(dayData.sleep, DEFAULT_WAKE_MINUTES));
           setSleepTouched(true);
         }
-        setWeight(dayData.weight ?? null);
-        setWorkout(dayData.workout ?? false);
-        setMood(dayData.mood ?? 0);
-        setEnergy(dayData.energy ?? 0);
-        setBrainFog(dayData.brainFog ?? 0);
-        setStress(dayData.stress ?? 0);
+        // Merges legacy top-level fields with the modern values map.
+        setValues(readDayValues(dayData));
         setNotes(dayData.notes ?? "");
       }
       setLoading(false);
@@ -102,8 +106,7 @@ function Home() {
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       await saveDayEntry(uid, dateKey, {
-        date: dateKey, takenToday, weight, workout,
-        mood, energy, brainFog, stress, notes,
+        date: dateKey, takenToday, values, notes,
         sleep: sleepTouched ? sleepHours : null,
         bedMinutes: sleepTouched ? bedMinutes : null,
         wakeMinutes: sleepTouched ? wakeMinutes : null
@@ -113,7 +116,7 @@ function Home() {
 
     return () => clearTimeout(saveTimer.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [takenToday, bedMinutes, wakeMinutes, sleepTouched, weight, workout, mood, energy, brainFog, stress, notes, dateKey]);
+  }, [takenToday, bedMinutes, wakeMinutes, sleepTouched, values, notes, dateKey]);
 
   const toggleMed = useCallback(id => {
     setTakenToday(prev => ({ ...prev, [id]: !prev[id] }));
@@ -129,11 +132,17 @@ function Home() {
     setSleepTouched(true);
   }, []);
 
-  const total = medications.length + 6; // meds + sleep, weight, workout, mood, energy, brainFog(stress optional)
+  const setValue = useCallback((id, v) => {
+    setValues(prev => ({ ...prev, [id]: v }));
+  }, []);
+
+  // Derived from the metric list rather than a hand-maintained constant, so
+  // adding or removing a metric keeps the progress ring honest automatically.
+  const total = medications.length + metrics.length + 1; // +1 for sleep
   const completed =
     Object.values(takenToday).filter(Boolean).length +
-    (sleepTouched ? 1 : 0) + (weight ? 1 : 0) + (workout ? 1 : 0) +
-    (mood ? 1 : 0) + (energy ? 1 : 0) + (brainFog ? 1 : 0);
+    (sleepTouched ? 1 : 0) +
+    metrics.filter(m => isMetricLogged(m, values[m.id])).length;
 
   const morningMeds = medications.filter(m => m.time !== "Night");
   const eveningMeds = medications.filter(m => m.time === "Night");
@@ -148,7 +157,7 @@ function Home() {
         </header>
         <section className="group">
           <Skeleton w={90} h={11} style={{ marginBottom: "var(--sp-4)" }} />
-          {[0, 1, 2, 3].map(i => (
+          {[0, 1, 2, 3, 4].map(i => (
             <div className="metric-block" key={i}>
               <Skeleton w={70} h={13} style={{ marginBottom: "var(--sp-2)" }} />
               <Skeleton h={44} />
@@ -209,50 +218,23 @@ function Home() {
           </div>
         </div>
 
-        <div className="metric-block">
-          <span className="metric-label">Mood</span>
-          <Segmented value={mood} onChange={setMood} />
-        </div>
-
-        <div className="metric-block">
-          <span className="metric-label">Energy</span>
-          <Segmented value={energy} onChange={setEnergy} />
-        </div>
-
-        <div className="metric-block">
-          <span className="metric-label">Brain Fog</span>
-          <Segmented value={brainFog} onChange={setBrainFog} />
-        </div>
-
-        <div className="metric-block">
-          <span className="metric-label">Stress</span>
-          <Segmented value={stress} onChange={setStress} />
-        </div>
-      </section>
-
-      <section className="group">
-        <h2 className="group-title">Body</h2>
-
-        <div className="metric-block">
-          <div className="metric-top">
-            <span className="metric-label">Weight</span>
-            <span className="metric-value-lg">{weight ? `${weight} lbs` : "—"}</span>
+        {/* User-defined metrics, in their chosen order. */}
+        {metrics.map(m => (
+          <div className="metric-block" key={m.id}>
+            <MetricInput
+              metric={m}
+              value={values[m.id]}
+              onChange={v => setValue(m.id, v)}
+            />
           </div>
-          <div className="stepper-inline">
-            <button onClick={() => setWeight(weight ? weight - 1 : 132)}>−</button>
-            <button onClick={() => setWeight(weight ? weight + 1 : 132)}>+</button>
-          </div>
-        </div>
+        ))}
 
-        <div className="metric-row-flat">
-          <span className="metric-label">Exercise</span>
-          <button
-            className={workout ? "toggle-pill done" : "toggle-pill"}
-            onClick={() => setWorkout(!workout)}
-          >
-            {workout ? "Completed" : "Not logged"}
-          </button>
-        </div>
+        {metrics.length === 0 && (
+          <p className="empty-hint">
+            You're only tracking sleep right now. Add what else you'd like to
+            track in Settings.
+          </p>
+        )}
       </section>
 
       <section className="group">

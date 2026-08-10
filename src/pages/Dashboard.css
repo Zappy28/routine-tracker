@@ -88,11 +88,9 @@
   z-index: 1;
 }
 
-@media (min-width: 768px) {
-  .routine-page {
-    padding-bottom: var(--sp-6);
-  }
-}
+/* Desktop overrides live at the very END of this file — see the block after
+   the stagger keyframes. Media queries add no specificity, so they have to
+   come after the base rules they override. */
 
 /* ---------- Grain overlay ---------- */
 /* A very subtle noise texture over the whole page, generated procedurally via
@@ -587,4 +585,66 @@
 @keyframes stagger-in-kf {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Desktop ---------- */
+/* Mobile is the baseline for everything above; this block only widens and
+   re-spaces for big screens, and never runs below 768px. It must stay LAST in
+   this file — media queries carry no extra specificity, so placing it earlier
+   lets the base single-class rules win. */
+
+@media (min-width: 768px) {
+  .routine-page {
+    max-width: 720px;
+    padding-bottom: var(--sp-6);
+  }
+
+  .hero {
+    padding: var(--sp-6) var(--sp-5) var(--sp-5);
+  }
+
+  .hero h1 {
+    font-size: 40px;
+  }
+
+  /* Cards span the full column and rely on <main>'s padding for the outer
+     gutter, instead of carrying their own side margins like on mobile. Their
+     inner padding then matches the hero's, so text left edges line up. */
+  .group {
+    padding: var(--sp-5);
+    margin: 0 0 var(--sp-4);
+  }
+
+  .group:last-of-type {
+    margin-bottom: 0;
+  }
+
+  /* Controls that would otherwise stretch to absurd widths in a 720px column —
+     a 1-5 picker and a +/- stepper shouldn't be 650px wide. */
+  .segmented {
+    max-width: 440px;
+  }
+
+  .stepper-inline {
+    max-width: 320px;
+  }
+
+  /* Bigger, softer glow to suit the larger canvas — at mobile size these read
+     as small bright spots in the corners of a wide screen. */
+  .ambient-blob {
+    width: 520px;
+    height: 520px;
+    filter: blur(96px);
+    opacity: 0.22;
+  }
+
+  .ambient-blob.blob-1 {
+    top: -160px;
+    left: -120px;
+  }
+
+  .ambient-blob.blob-2 {
+    top: 180px;
+    right: -180px;
+  }
 }

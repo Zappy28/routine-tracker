@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import {
   metricByKey,
+  buildChartMetrics,
   hasValue,
   formatMetricValue,
   formatAxisValue,
@@ -12,6 +13,7 @@ import {
   adherenceComparisonInsight,
   weekOverWeekInsight
 } from "../utils/trendMath";
+import { flattenDay } from "../utils/metrics";
 
 const RANGES = [
   { key: "1M", days: 30 },
@@ -27,8 +29,10 @@ function dateLabel(id) {
   return new Date(`${id}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function MetricDetail({ metricKey, days, medications, initialRange, onBack }) {
-  const metric = metricByKey(metricKey);
+function MetricDetail({ metricKey, days: rawDays, medications, metrics: userMetrics = [], initialRange, onBack }) {
+  const METRICS = useMemo(() => buildChartMetrics(userMetrics), [userMetrics]);
+  const days = useMemo(() => rawDays.map(flattenDay), [rawDays]);
+  const metric = metricByKey(METRICS, metricKey);
   const [range, setRange] = useState(initialRange || "3M");
   const [showMedBand, setShowMedBand] = useState(false);
   const [inspectIndex, setInspectIndex] = useState(null);
@@ -108,10 +112,10 @@ function MetricDetail({ metricKey, days, medications, initialRange, onBack }) {
 
   const insights = useMemo(() => {
     return [
-      adherenceComparisonInsight(chartDays, medications, metricKey),
-      weekOverWeekInsight(days, metricKey)
+      adherenceComparisonInsight(METRICS, chartDays, medications, metricKey),
+      weekOverWeekInsight(METRICS, days, metricKey)
     ].filter(Boolean);
-  }, [chartDays, days, medications, metricKey]);
+  }, [METRICS, chartDays, days, medications, metricKey]);
 
   function handleChartClick(e) {
     if (n === 0 || !svgRef.current) return;

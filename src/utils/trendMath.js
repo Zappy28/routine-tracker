@@ -1,23 +1,42 @@
 // Pure helpers shared by TrendsView (overlay + summary list) and MetricDetail.
 // No React here — keeps the math testable/reusable independent of rendering.
 
-// Config-driven so adding a metric later is additive, not a rewrite.
-export const METRICS = [
-  { key: "mood", label: "Mood", unit: "/5", max: 5 },
-  { key: "energy", label: "Energy", unit: "/5", max: 5 },
-  { key: "brainFog", label: "Brain Fog", unit: "/5", max: 5 },
-  { key: "stress", label: "Stress", unit: "/5", max: 5 },
-  { key: "sleep", label: "Sleep", unit: "h", max: 12 },
-  { key: "weight", label: "Weight", unit: " lbs", relative: true }
-];
+// Chart descriptors are derived from the user's own metric list rather than a
+// fixed constant. Sleep is appended because it's a permanent field that lives
+// outside the metric system but still belongs on the charts.
+//
+// `relative: true` means "normalize against this metric's own observed range"
+// — used for counts and weight, which have no fixed ceiling.
+export function buildChartMetrics(userMetrics = []) {
+  const fromUser = userMetrics.map(m => {
+    if (m.type === "toggle") {
+      return { key: m.id, label: m.label, unit: "", max: 1, kind: "toggle" };
+    }
+    if (m.type === "count") {
+      return {
+        key: m.id,
+        label: m.label,
+        unit: m.unit ? ` ${m.unit}` : "",
+        relative: true,
+        kind: "count"
+      };
+    }
+    return { key: m.id, label: m.label, unit: "/10", max: 10, kind: "scale" };
+  });
 
-export function metricByKey(key) {
-  return METRICS.find(m => m.key === key);
+  return [...fromUser, { key: "sleep", label: "Sleep", unit: "h", max: 12, kind: "scale" }];
 }
 
-// 0 is the app's "not logged" sentinel for the 1-5 scales, so treat it as a gap.
+export function metricByKey(metrics, key) {
+  return metrics.find(m => m.key === key);
+}
+
+// 0 is the app's "not logged" sentinel for the 1-10 scales, so treat it as a gap.
 // Weight/sleep are never legitimately 0 either, so the same rule is safe app-wide.
-export function hasValue(v) {
+export function hasValue(v, metric) {
+  if (v === undefined || v === null) return false;
+  // For counts and toggles, 0 is a genuine measurement, not "unset".
+  if (metric && (metric.kind === "count" || metric.kind === "toggle")) return true;
   return v !== undefined && v !== null && v !== 0;
 }
 
@@ -37,8 +56,8 @@ export function formatAxisValue(metric, value) {
 // Normalize a raw value to 0-1 for the shared overlay space.
 // Fixed-scale metrics (1-5, sleep) divide by their max; weight normalizes
 // against its own min/max across the visible range since it has no natural ceiling.
-export function normalizeValue(key, raw, chartDays) {
-  const metric = metricByKey(key);
+export function normalizeValue(metrics, key, raw, chartDays) {
+  const metric = metricByKey(metrics, key);
   if (!hasValue(raw)) return null;
 
   if (!metric.relative) {
@@ -53,8 +72,8 @@ export function normalizeValue(key, raw, chartDays) {
   return (raw - min) / (max - min);
 }
 
-export function normalize(day, key, chartDays) {
-  return normalizeValue(key, day[key], chartDays);
+export function normalize(metrics, day, key, chartDays) {
+  return normalizeValue(metrics, key, day[key], chartDays);
 }
 
 // Trailing moving average over however many non-missing values fall in the
@@ -133,9 +152,10 @@ export function adherenceStreak(days, medications) {
 
 // --- Insight generators. Each returns a string or null if not applicable. ---
 
-export function adherenceComparisonInsight(days, medications, metricKey) {
+export function adherenceComparisonInsight(metrics, days, medications, metricKey) {
   if (medications.length === 0) return null;
-  const metric = metricByKey(metricKey);
+  const metric = metricByKey(metrics, metricKey);
+  if (!metric) return null;
   const full = [];
   const partial = [];
   days.forEach(day => {
@@ -147,7 +167,9 @@ export function adherenceComparisonInsight(days, medications, metricKey) {
   const avg = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
   const fullAvg = avg(full);
   const partialAvg = avg(partial);
-  if (Math.abs(fullAvg - partialAvg) < 0.4) return null;
+  // Threshold doubled alongside the 1-5 -> 1-10 scale change, to require the
+  // same relative difference as before.
+  if (Math.abs(fullAvg - partialAvg) < 0.8) return null;
   const direction = fullAvg > partialAvg ? "better" : "worse";
   return `${metric.label} tends to be ${direction} on days medication was fully taken (${fullAvg.toFixed(1)} vs ${partialAvg.toFixed(1)}).`;
 }
@@ -158,17 +180,20 @@ export function streakInsight(days, medications) {
   return `You've taken all medications for ${streak} days in a row.`;
 }
 
-export function weekOverWeekInsight(days, metricKey) {
-  const metric = metricByKey(metricKey);
+export function weekOverWeekInsight(metrics, days, metricKey) {
+  const metric = metricByKey(metrics, metricKey);
+  if (!metric) return null;
   const delta = periodDelta(days, metricKey);
   if (!delta) return null;
-  if (Math.abs(delta.delta) < 0.3) return null;
+  // Same doubling as the adherence-comparison threshold above.
+  if (Math.abs(delta.delta) < 0.6) return null;
   const direction = delta.delta > 0 ? "up" : "down";
   return `${metric.label} is ${direction} ${Math.abs(delta.delta).toFixed(1)} this week compared to last (${delta.currentAvg.toFixed(1)} vs ${delta.previousAvg.toFixed(1)}).`;
 }
 
-export function bestWorstInsight(days, metricKey) {
-  const metric = metricByKey(metricKey);
+export function bestWorstInsight(metrics, days, metricKey) {
+  const metric = metricByKey(metrics, metricKey);
+  if (!metric) return null;
   const logged = days.filter(d => hasValue(d[metricKey]));
   if (logged.length < 5) return null;
   const best = logged.reduce((a, b) => (b[metricKey] > a[metricKey] ? b : a));

@@ -20,6 +20,10 @@
 
   --radius: 14px;
   --nav-size: 64px;
+
+  /* Width of the desktop nav rail. Content offsets by this, and the rail
+     itself sizes to it — keep them reading from the one token. */
+  --sidebar-w: 248px;
 }
 
 * {
@@ -50,8 +54,6 @@ body,
 body {
 
   overflow-x:hidden;
-
-  overscroll-behavior:none;
 
 }
 
@@ -104,10 +106,32 @@ main {
 
 @media (min-width: 768px) {
   main {
-    padding: 36px 32px;
+    /* Clear the fixed nav rail, then let the page inside center itself in the
+       remaining space rather than hugging the rail (which is what the old
+       `margin: 0; max-width: 640px` did). */
     margin: 0;
-    max-width: 640px;
+    max-width: none;
+    padding: 40px 40px 56px;
+    padding-left: calc(var(--sidebar-w) + 40px);
   }
+}
+
+/* Tablet / small laptop: the rail eats a fixed 248px, so full desktop gutters
+   would leave the content column narrower here than it is on a large phone.
+   Tighten the gutters until there's room for the roomier spacing. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  main {
+    padding: 32px 24px 48px;
+    padding-left: calc(var(--sidebar-w) + 24px);
+  }
+}
+
+/* Signed-out routes render full-bleed — the auth pages center themselves and
+   own their own padding, so the app content column shouldn't constrain them. */
+.app-shell-auth main {
+  max-width: none;
+  margin: 0;
+  padding: 0;
 }
 
 /* ---- Card ---- */
@@ -175,9 +199,6 @@ main {
 html, body {
   /* Kills the gray/blue flash box you get when tapping buttons/links on mobile */
   -webkit-tap-highlight-color: transparent;
-
-  /* Stops the page from being pulled down like a browser tab (rubber-band bounce) */
-  overscroll-behavior-y: none;
 
   /* Prevents accidental text selection when tapping UI elements repeatedly */
   -webkit-user-select: none;

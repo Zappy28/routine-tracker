@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import MetricDetail from "./MetricDetail";
 import {
-  METRICS,
+  buildChartMetrics,
   hasValue,
   normalize,
   normalizeValue,
@@ -17,6 +17,7 @@ import {
   adherenceComparisonInsight,
   bestWorstInsight
 } from "../utils/trendMath";
+import { flattenDay } from "../utils/metrics";
 
 const RANGES = [
   { key: "1M", days: 30 },
@@ -35,11 +36,11 @@ function dateLabel(id) {
   return new Date(`${id}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function Sparkline({ days, metricKey }) {
+function Sparkline({ metrics, days, metricKey }) {
   const xFor = i => (days.length <= 1 ? SPARK_W / 2 : (i * SPARK_W) / (days.length - 1));
   const segments = useMemo(
-    () => buildSegments(days, day => normalize(day, metricKey, days), xFor, SPARK_H),
-    [days, metricKey] // eslint-disable-line react-hooks/exhaustive-deps
+    () => buildSegments(days, day => normalize(metrics, day, metricKey, days), xFor, SPARK_H),
+    [metrics, days, metricKey] // eslint-disable-line react-hooks/exhaustive-deps
   );
   if (segments.length === 0) {
     return <svg className="trend-summary-sparkline" viewBox={`0 0 ${SPARK_W} ${SPARK_H}`} />;
@@ -53,14 +54,24 @@ function Sparkline({ days, metricKey }) {
   );
 }
 
-function TrendsView({ days, medications }) {
-  const [selected, setSelected] = useState(["mood", "stress"]);
+function TrendsView({ days: rawDays, medications, metrics: userMetrics = [] }) {
+  // Chart descriptors derived from the user's own metric list, and day docs
+  // flattened so legacy + modern shapes both read the same way.
+  const METRICS = useMemo(() => buildChartMetrics(userMetrics), [userMetrics]);
+  const days = useMemo(() => rawDays.map(flattenDay), [rawDays]);
+
+  // null means "user hasn't chosen yet" — the default is derived from whichever
+  // metrics they actually track, rather than the old hardcoded mood/stress.
+  const [selected, setSelected] = useState(null);
   const [showMedBand, setShowMedBand] = useState(false);
   const [range, setRange] = useState("3M");
   const [smoothed, setSmoothed] = useState(true);
   const [inspectIndex, setInspectIndex] = useState(null);
   const [detailMetric, setDetailMetric] = useState(null);
   const svgRef = useRef(null);
+
+  const defaultSelection = useMemo(() => METRICS.slice(0, 2).map(m => m.key), [METRICS]);
+  const activeKeys = selected ?? defaultSelection;
 
   const rangeDays = RANGES.find(r => r.key === range).days;
   const chartDays = useMemo(() => filterRange(days, rangeDays), [days, rangeDays]);
@@ -69,18 +80,19 @@ function TrendsView({ days, medications }) {
 
   function toggleMetric(key) {
     setSelected(prev => {
-      if (prev.includes(key)) return prev.filter(k => k !== key);
-      if (prev.length >= MAX_LINES) return prev;
-      return [...prev, key];
+      const base = prev ?? defaultSelection;
+      if (base.includes(key)) return base.filter(k => k !== key);
+      if (base.length >= MAX_LINES) return base;
+      return [...base, key];
     });
   }
 
   const lines = useMemo(() => {
-    return selected.map((key, idx) => {
+    return activeKeys.map((key, idx) => {
       const smoothedVals = smoothed ? movingAverage(chartDays, key, 7) : null;
       const valueFn = smoothed
-        ? (day, i) => normalizeValue(key, smoothedVals[i], chartDays)
-        : day => normalize(day, key, chartDays);
+        ? (day, i) => normalizeValue(METRICS, key, smoothedVals[i], chartDays)
+        : day => normalize(METRICS, day, key, chartDays);
       const segments = buildSegments(chartDays, valueFn, xFor, CHART_H);
       const last = lastValue(chartDays, key);
       let labelY = null;
@@ -92,7 +104,7 @@ function TrendsView({ days, medications }) {
       return { key, segments, colorVar: `--line-${idx + 1}`, last, labelY };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected, chartDays, smoothed]);
+  }, [activeKeys, chartDays, smoothed]);
 
   const bands = useMemo(() => {
     if (!showMedBand || medications.length === 0) return [];
@@ -111,17 +123,17 @@ function TrendsView({ days, medications }) {
     return result;
   }, [chartDays, showMedBand, medications]);
 
-  const primary = selected[0];
+  const primary = activeKeys[0];
 
   const insights = useMemo(() => {
     if (!primary) return [];
     return [
       streakInsight(days, medications),
-      weekOverWeekInsight(days, primary),
-      adherenceComparisonInsight(chartDays, medications, primary),
-      bestWorstInsight(chartDays, primary)
+      weekOverWeekInsight(METRICS, days, primary),
+      adherenceComparisonInsight(METRICS, chartDays, medications, primary),
+      bestWorstInsight(METRICS, chartDays, primary)
     ].filter(Boolean).slice(0, 3);
-  }, [days, chartDays, medications, primary]);
+  }, [METRICS, days, chartDays, medications, primary]);
 
   function handleChartClick(e) {
     if (n === 0 || !svgRef.current) return;
@@ -143,8 +155,9 @@ function TrendsView({ days, medications }) {
     return (
       <MetricDetail
         metricKey={detailMetric}
-        days={days}
+        days={rawDays}
         medications={medications}
+        metrics={userMetrics}
         initialRange={range}
         onBack={() => setDetailMetric(null)}
       />
@@ -155,7 +168,7 @@ function TrendsView({ days, medications }) {
     <div>
       <div className="chip-row">
         {METRICS.map(m => {
-          const idx = selected.indexOf(m.key);
+          const idx = activeKeys.indexOf(m.key);
           const active = idx !== -1;
           return (
             <span
@@ -229,7 +242,7 @@ function TrendsView({ days, medications }) {
           {inspectDay && (
             <div className="trend-inspect-card">
               <div className="trend-inspect-date">{dateLabel(inspectDay.id)}</div>
-              {selected.map((key, idx) => {
+              {activeKeys.map((key, idx) => {
                 const metric = METRICS.find(m => m.key === key);
                 return (
                   <div className="trend-inspect-row" key={key}>
@@ -280,7 +293,7 @@ function TrendsView({ days, medications }) {
               onClick={() => setDetailMetric(m.key)}
             >
               <span className="trend-summary-label">{m.label}</span>
-              <Sparkline days={summaryDays} metricKey={m.key} />
+              <Sparkline metrics={METRICS} days={summaryDays} metricKey={m.key} />
               <span className="trend-summary-value">{formatMetricValue(m, value)}</span>
               <span className={
                 !delta || Math.abs(delta.delta) < 0.05

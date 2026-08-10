@@ -28,6 +28,15 @@ export function setStoredTimezone(tz) {
   }
 }
 
+// Called on account deletion so nothing personal is left behind on the device.
+export function clearStoredTimezone() {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // nothing to clean up if storage was unavailable in the first place
+  }
+}
+
 // Curated fallback for browsers without Intl.supportedValuesOf (older Safari).
 const COMMON_TIMEZONES = [
   "Pacific/Honolulu", "America/Anchorage", "America/Los_Angeles", "America/Denver",

@@ -1,0 +1,101 @@
+rules_version = '2';
+
+// Waypoint — Firestore security rules.
+//
+// Threat model: every user's health data is private to them. Anyone can sign
+// up, so "is logged in" is NOT sufficient authorization — rules must check
+// document ownership against request.auth.uid on every path.
+//
+// Default posture is deny-all; access is granted only by the explicit matches
+// below. Any collection added later starts locked until a rule is written.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- Helpers ----
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // The only authorization check that matters here: the caller owns this
+    // document tree. Never weaken this to just isSignedIn().
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Metric values now live in a user-defined `values` map keyed by metric id,
+    // so the old per-field range checks (mood/energy/...) no longer apply —
+    // rules cannot iterate arbitrary map keys, so there is no way to range-check
+    // every entry generically. Per-value validation therefore lives client-side;
+    // what's enforced here is the shape and an upper bound on size, which is
+    // what actually protects the database from abuse.
+    function valuesMapOk(v) {
+      return v == null || (v is map && v.size() <= 60);
+    }
+
+    function stringUnder(v, maxLen) {
+      return v == null || (v is string && v.size() <= maxLen);
+    }
+
+    // Bounds a number, allowing null. Keeps a compromised client from writing
+    // absurd values that would break charts or bloat documents.
+    function numberBetween(v, lo, hi) {
+      return v == null || (v is number && v >= lo && v <= hi);
+    }
+
+    // ---- User profile: /users/{userId} ----
+    // Holds `timezone`, `displayName`, the `medications` array, the
+    // user-defined `metrics` array, and default bed/wake times.
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+
+      allow write: if isOwner(userId)
+        && stringUnder(request.resource.data.get('timezone', null), 64)
+        && stringUnder(request.resource.data.get('displayName', null), 80)
+        && numberBetween(request.resource.data.get('defaultBedMinutes', null), 0, 1440)
+        && numberBetween(request.resource.data.get('defaultWakeMinutes', null), 0, 1440)
+        && (
+             request.resource.data.get('medications', null) == null
+             || (
+                  request.resource.data.medications is list
+                  && request.resource.data.medications.size() <= 200
+                )
+           )
+        && (
+             request.resource.data.get('metrics', null) == null
+             || (
+                  request.resource.data.metrics is list
+                  && request.resource.data.metrics.size() <= 60
+                )
+           );
+
+      allow delete: if isOwner(userId);
+
+      // ---- Daily entries: /users/{userId}/days/{dateKey} ----
+
+      match /days/{dateKey} {
+        allow read: if isOwner(userId);
+
+        allow write: if isOwner(userId)
+          && valuesMapOk(request.resource.data.get('values', null))
+          // Sleep duration in hours, and bed/wake as minutes-past-midnight.
+          && numberBetween(request.resource.data.get('sleep', null), 0, 24)
+          && numberBetween(request.resource.data.get('bedMinutes', null), 0, 1440)
+          && numberBetween(request.resource.data.get('wakeMinutes', null), 0, 1440)
+          && numberBetween(request.resource.data.get('weight', null), 0, 2000)
+          // Caps free-text so the DB can't be used as anonymous file storage.
+          && stringUnder(request.resource.data.get('notes', null), 5000);
+
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // ---- Default deny ----
+    // Explicit for clarity; anything not matched above is already denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

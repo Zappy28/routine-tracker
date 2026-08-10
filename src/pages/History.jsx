@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { auth } from "../firebase/Config";
-import { getHistory, getMedications } from "../firebase/firestoreService";
+import { getHistory, getMedications, getMetrics } from "../firebase/firestoreService";
+import { seedDefaultMetrics, sortMetrics } from "../utils/metrics";
 import { useLoadingBar } from "../context/useLoadingBar";
 import Skeleton from "../components/Skeleton";
 import AmbientGlow from "../components/AmbientGlow";
@@ -12,6 +13,7 @@ import "./History.css";
 function History() {
   const [days, setDays] = useState([]);
   const [medications, setMedications] = useState([]);
+  const [metrics, setMetrics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("trends");
   const { start, done } = useLoadingBar();
@@ -22,12 +24,14 @@ function History() {
       if (!uid) { setLoading(false); return; }
 
       start();
-      const [history, meds] = await Promise.all([
+      const [history, meds, userMetrics] = await Promise.all([
         getHistory(uid),
-        getMedications(uid)
+        getMedications(uid),
+        getMetrics(uid)
       ]);
       setDays(history);
       setMedications(meds);
+      setMetrics(sortMetrics(userMetrics?.length ? userMetrics : seedDefaultMetrics()));
       setLoading(false);
       done();
     }
@@ -102,9 +106,14 @@ function History() {
 
           <section className="group">
             {tab === "trends" ? (
-              <TrendsView days={days} medications={medications} />
+              <TrendsView days={days} medications={medications} metrics={metrics} />
             ) : (
-              <DaysView days={days} medications={medications} onDayUpdate={handleDayUpdate} />
+              <DaysView
+                days={days}
+                medications={medications}
+                metrics={metrics}
+                onDayUpdate={handleDayUpdate}
+              />
             )}
           </section>
         </>

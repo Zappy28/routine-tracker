@@ -6,12 +6,16 @@ import {
 import { auth, googleProvider } from "../firebase/Config";
 import { useNavigate, Link } from "react-router-dom";
 import { useLoadingBar } from "../context/useLoadingBar";
-import "./Login.css";
+import AmbientGlow from "../components/AmbientGlow";
+import WaypointMark from "../components/WaypointMark";
+import "./Dashboard.css";
+import "./Auth.css";
 
 export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [busy, setBusy] = useState(false);
 
     const navigate = useNavigate();
     const { start, done } = useLoadingBar();
@@ -19,6 +23,8 @@ export default function Login() {
     async function handleLogin(e) {
         e.preventDefault();
 
+        setError("");
+        setBusy(true);
         start();
         try {
             await signInWithEmailAndPassword(auth, email, password);
@@ -26,11 +32,14 @@ export default function Login() {
         } catch {
             setError("Incorrect email or password.");
         } finally {
+            setBusy(false);
             done();
         }
     }
 
     async function handleGoogleLogin() {
+        setError("");
+        setBusy(true);
         start();
         try {
             await signInWithPopup(auth, googleProvider);
@@ -38,61 +47,80 @@ export default function Login() {
         } catch (err) {
             console.error(err);
         } finally {
+            setBusy(false);
             done();
         }
     }
 
     return (
-        <div className="login-page">
-            <div className="login-card">
+        <div className="auth-page">
+            <AmbientGlow />
 
-                <h1>Waypoint</h1>
-                <p>Track your habits. Improve every day.</p>
+            <div className="auth-card">
+                <div className="auth-brand">
+                    <WaypointMark size={24} />
+                    <span className="auth-brand-text">Waypoint</span>
+                </div>
 
-                <form onSubmit={handleLogin}>
+                <h1>Welcome back.</h1>
+                <p className="auth-sub">Track your habits. Improve every day.</p>
 
-                    <input
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e)=>setEmail(e.target.value)}
-                    />
+                <form className="auth-form" onSubmit={handleLogin}>
+                    <div className="auth-field">
+                        <label className="auth-label" htmlFor="login-email">Email</label>
+                        <input
+                            id="login-email"
+                            className="auth-input"
+                            type="email"
+                            autoComplete="email"
+                            placeholder="you@example.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                    </div>
 
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e)=>setPassword(e.target.value)}
-                    />
+                    <div className="auth-field">
+                        <label className="auth-label" htmlFor="login-password">Password</label>
+                        <input
+                            id="login-password"
+                            className="auth-input"
+                            type="password"
+                            autoComplete="current-password"
+                            placeholder="••••••••"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                    </div>
 
-                    <button className="login-btn">
-                        Login
+                    <button className="auth-submit" type="submit" disabled={busy}>
+                        {busy ? "Signing in…" : "Sign in"}
                     </button>
-
                 </form>
 
-                <div className="divider">
-                    <span>OR</span>
+                <div className="auth-divider">
+                    <span>or</span>
                 </div>
 
                 <button
-                    className="google-btn"
+                    className="auth-google-btn"
+                    type="button"
                     onClick={handleGoogleLogin}
+                    disabled={busy}
                 >
                     <img
                         src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
                         alt=""
+                        width="18"
+                        height="18"
                     />
                     Continue with Google
                 </button>
 
-                {error && <p className="error">{error}</p>}
+                {error && <p className="auth-error">{error}</p>}
 
-                <p className="bottom-text">
-                    Don't have an account?
-                    <Link to="/register"> Create one</Link>
+                <p className="auth-footer">
+                    Don't have an account? <Link to="/register">Create one</Link>
                 </p>
-
             </div>
         </div>
     );

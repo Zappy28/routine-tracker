@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { auth } from "../firebase/Config";
 import { saveDayEntry } from "../firebase/firestoreService";
-import Segmented from "./Segmented";
+import MetricInput from "./MetricInput";
 import TimeWheel from "./TimeWheel";
+import { readDayValues } from "../utils/metrics";
 import {
   DEFAULT_BED_MINUTES,
   DEFAULT_WAKE_MINUTES,
@@ -23,14 +24,11 @@ function dateLabelFull(dateKey) {
 // "today" form, but parameterized by an arbitrary dateKey and saving
 // explicitly (Save/Cancel) rather than auto-saving, since editing history is
 // a deliberate action rather than a continuous one.
-function DayEditor({ dateKey, initialData, medications, onSave, onCancel }) {
+function DayEditor({ dateKey, initialData, medications, metrics = [], onSave, onCancel }) {
   const [takenToday, setTakenToday] = useState(initialData?.takenToday || {});
-  const [mood, setMood] = useState(initialData?.mood ?? 0);
-  const [energy, setEnergy] = useState(initialData?.energy ?? 0);
-  const [brainFog, setBrainFog] = useState(initialData?.brainFog ?? 0);
-  const [stress, setStress] = useState(initialData?.stress ?? 0);
-  const [weight, setWeight] = useState(initialData?.weight ?? null);
-  const [workout, setWorkout] = useState(initialData?.workout ?? false);
+  // Legacy top-level fields are merged in, so editing an old entry shows its
+  // real values rather than a blank form.
+  const [values, setValues] = useState(() => readDayValues(initialData));
   const [notes, setNotes] = useState(initialData?.notes ?? "");
   const [saving, setSaving] = useState(false);
 
@@ -59,18 +57,17 @@ function DayEditor({ dateKey, initialData, medications, onSave, onCancel }) {
     setSleepTouched(true);
   }
 
+  function setValue(id, v) {
+    setValues(prev => ({ ...prev, [id]: v }));
+  }
+
   async function handleSave() {
     setSaving(true);
     const uid = auth.currentUser?.uid;
     const payload = {
       date: dateKey,
       takenToday,
-      weight,
-      workout,
-      mood,
-      energy,
-      brainFog,
-      stress,
+      values,
       notes,
       sleep: sleepTouched ? sleepHours : null,
       bedMinutes: sleepTouched ? bedMinutes : null,
@@ -115,46 +112,15 @@ function DayEditor({ dateKey, initialData, medications, onSave, onCancel }) {
         </div>
       </div>
 
-      <div className="metric-block">
-        <span className="metric-label">Mood</span>
-        <Segmented value={mood} onChange={setMood} />
-      </div>
-
-      <div className="metric-block">
-        <span className="metric-label">Energy</span>
-        <Segmented value={energy} onChange={setEnergy} />
-      </div>
-
-      <div className="metric-block">
-        <span className="metric-label">Brain Fog</span>
-        <Segmented value={brainFog} onChange={setBrainFog} />
-      </div>
-
-      <div className="metric-block">
-        <span className="metric-label">Stress</span>
-        <Segmented value={stress} onChange={setStress} />
-      </div>
-
-      <div className="metric-block">
-        <div className="metric-top">
-          <span className="metric-label">Weight</span>
-          <span className="metric-value-lg">{weight ? `${weight} lbs` : "—"}</span>
+      {metrics.map(m => (
+        <div className="metric-block" key={m.id}>
+          <MetricInput
+            metric={m}
+            value={values[m.id]}
+            onChange={v => setValue(m.id, v)}
+          />
         </div>
-        <div className="stepper-inline">
-          <button onClick={() => setWeight(weight ? weight - 1 : 132)}>−</button>
-          <button onClick={() => setWeight(weight ? weight + 1 : 132)}>+</button>
-        </div>
-      </div>
-
-      <div className="metric-row-flat">
-        <span className="metric-label">Exercise</span>
-        <button
-          className={workout ? "toggle-pill done" : "toggle-pill"}
-          onClick={() => setWorkout(!workout)}
-        >
-          {workout ? "Completed" : "Not logged"}
-        </button>
-      </div>
+      ))}
 
       {medications.length > 0 && (
         <div className="metric-block" style={{ marginTop: "var(--sp-4)" }}>

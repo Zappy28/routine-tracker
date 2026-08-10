@@ -105,3 +105,195 @@
 .settings-delete-btn:active {
   transform: scale(0.92);
 }
+
+/* ---------- Account (change password / log out) ---------- */
+
+.settings-password-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.settings-full-btn {
+  width: 100%;
+}
+
+.settings-success {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-sm);
+  color: var(--accent);
+  font-size: 13px;
+  text-align: center;
+}
+
+.settings-logout-btn {
+  width: 100%;
+  height: 44px;
+  background: var(--bg-2);
+  border: 1px solid var(--danger-line);
+  border-radius: var(--r-md);
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-raised);
+  transition: background var(--dur) var(--ease), transform 100ms var(--ease);
+}
+
+.settings-logout-btn:hover {
+  background: var(--danger-dim);
+}
+
+.settings-logout-btn:active {
+  transform: scale(0.98);
+}
+
+.settings-logout-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+
+/* ---------- Tracked metrics ---------- */
+
+.settings-metric-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) 0;
+  border-top: 1px solid var(--line);
+}
+
+.settings-metric-row:first-of-type {
+  border-top: none;
+}
+
+.settings-metric-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-metric-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.settings-metric-actions button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.settings-preset-group {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin: var(--sp-2) 0 6px;
+}
+
+/* Presets use <button> so they're keyboard-reachable, unlike the older
+   span-based chips elsewhere in the app. */
+.settings-preset-row .chip {
+  font-family: inherit;
+}
+
+.settings-preset-row .chip:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+/* ---------- Data export ---------- */
+
+.settings-export-row {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.settings-export-btn {
+  flex: 1;
+  min-width: 140px;
+  height: 44px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text-1);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow-raised);
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), transform 100ms var(--ease);
+}
+
+.settings-export-btn:hover {
+  background: var(--bg-3);
+  border-color: var(--accent-line);
+}
+
+.settings-export-btn:active {
+  transform: scale(0.98);
+}
+
+.settings-export-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+
+/* ---------- Danger zone ---------- */
+/* Tinted border rather than a loud fill — visually distinct enough to signal
+   consequence without shouting at someone just visiting Settings. */
+
+.settings-danger {
+  border-color: var(--danger-line);
+}
+
+.settings-danger-title {
+  color: var(--danger);
+}
+
+.settings-danger-warning {
+  margin: 0;
+  padding: var(--sp-3);
+  background: var(--danger-dim);
+  border: 1px solid var(--danger-line);
+  border-radius: var(--r-sm);
+  color: var(--text-1);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.settings-danger-btn {
+  flex: 1;
+  height: 44px;
+  padding: 0 var(--sp-4);
+  background: var(--danger);
+  border: none;
+  border-radius: var(--r-md);
+  color: #1a0605;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-raised);
+  transition: background var(--dur) var(--ease), transform 100ms var(--ease);
+}
+
+.settings-danger-btn:hover {
+  background: #ec625f;
+}
+
+.settings-danger-btn:active {
+  transform: scale(0.98);
+}
+
+.settings-danger-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  transform: none;
+}

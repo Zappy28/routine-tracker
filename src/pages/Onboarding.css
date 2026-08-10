@@ -1,0 +1,75 @@
+/* First-run setup. Reuses the Auth.css card so the signed-out and just-signed-up
+   screens feel like one continuous flow. */
+
+.onboarding-page {
+  /* Content is taller than a login form, so top-align and let it scroll. */
+  align-items: flex-start;
+  padding-top: var(--sp-5);
+  padding-bottom: var(--sp-6);
+}
+
+.onboarding-card {
+  max-width: 460px;
+}
+
+/* ---------- Step indicator ---------- */
+
+.onboarding-steps {
+  display: flex;
+  gap: 6px;
+  margin-bottom: var(--sp-4);
+}
+
+.onboarding-step {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--bg-3);
+  transition: background var(--dur) var(--ease);
+}
+
+.onboarding-step.done {
+  background: var(--accent-line);
+}
+
+.onboarding-step.current {
+  background: var(--accent);
+}
+
+/* ---------- Groups ---------- */
+
+.onboarding-group {
+  margin-top: var(--sp-3);
+}
+
+.onboarding-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 6px;
+}
+
+/* Presets wrap rather than scroll — during setup you want to see all options
+   at once instead of discovering them by swiping. */
+.onboarding-chip-row {
+  flex-wrap: wrap;
+  overflow-x: visible;
+}
+
+.onboarding-chip-row .chip {
+  font-family: inherit;
+}
+
+/* ---------- Actions ---------- */
+
+.onboarding-actions {
+  display: flex;
+  gap: var(--sp-2);
+  margin-top: var(--sp-5);
+}
+
+.onboarding-next {
+  flex: 1;
+}

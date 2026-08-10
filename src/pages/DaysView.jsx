@@ -1,13 +1,6 @@
 import { useMemo, useState } from "react";
 import DayEditor from "../components/DayEditor";
-
-// Config-driven so adding a filter later is additive, not a rewrite.
-const FILTERS = [
-  { key: "all", label: "All", legend: "meds + workout + mood combined" },
-  { key: "medication", label: "Medication", legend: "medication adherence only" },
-  { key: "workout", label: "Workout", legend: "workout days only" },
-  { key: "mood", label: "Mood", legend: "mood, color-coded" }
-];
+import { readDayValues, hasMetricValue, formatMetricDisplay } from "../utils/metrics";
 
 const DOW = ["S", "M", "T", "W", "T", "F", "S"];
 
@@ -24,43 +17,73 @@ function medsFullyTaken(day, medications) {
   return medications.every(m => day.takenToday?.[m.id]);
 }
 
-function cellColors(day, filter, medications) {
+const GOOD = { background: "var(--accent-dim)", borderColor: "var(--accent-line)" };
+const MID = { background: "var(--warn-dim)", borderColor: "var(--warn-line)" };
+const LOW = { background: "var(--danger-dim)", borderColor: "var(--danger-line)" };
+
+// Colors a calendar cell for whichever metric (or "all") is selected. Works for
+// any user-defined metric rather than only the previously hardcoded mood.
+function cellColors(day, filter, medications, metricsById) {
   if (!day) return {};
+  const values = readDayValues(day);
 
   if (filter === "medication") {
+    return medsFullyTaken(day, medications) ? GOOD : {};
+  }
+
+  if (filter === "all") {
+    // Composite: medication adherence plus how many tracked metrics got logged.
     const full = medsFullyTaken(day, medications);
-    return full
-      ? { background: "var(--accent-dim)", borderColor: "var(--accent-line)" }
-      : {};
+    const tracked = Object.values(metricsById);
+    const logged = tracked.filter(m => hasMetricValue(m, values[m.id])).length;
+    const ratio = tracked.length ? logged / tracked.length : 0;
+    if (full && ratio >= 0.8) return GOOD;
+    if (logged > 0) return { background: "rgba(34, 211, 138, 0.07)" };
+    return {};
   }
 
-  if (filter === "workout") {
-    return day.workout
-      ? { background: "var(--accent-dim)", borderColor: "var(--accent-line)" }
-      : {};
+  const metric = metricsById[filter];
+  const v = values[filter];
+  if (!metric || !hasMetricValue(metric, v)) return {};
+
+  if (metric.type === "toggle") return v ? GOOD : {};
+
+  if (metric.type === "scale") {
+    // 8+ good, 5-7 neutral, below that low.
+    if (v >= 8) return GOOD;
+    if (v >= 5) return MID;
+    return LOW;
   }
 
-  if (filter === "mood") {
-    if (!day.mood) return {};
-    if (day.mood >= 4) return { background: "var(--accent-dim)", borderColor: "var(--accent-line)" };
-    if (day.mood === 3) return { background: "var(--warn-dim)", borderColor: "var(--warn-line)" };
-    return { background: "var(--danger-dim)", borderColor: "var(--danger-line)" };
-  }
-
-  // all: composite adherence score
-  const full = medsFullyTaken(day, medications);
-  const score = (full ? 1 : 0) + (day.workout ? 1 : 0) + (day.mood >= 4 ? 1 : 0);
-  if (score >= 3) return { background: "var(--accent-dim)", borderColor: "var(--accent-line)" };
-  if (score >= 1) return { background: "rgba(79, 174, 130, 0.07)" };
-  return {};
+  // Counts have no universal "good" value — just show that something was logged.
+  return { background: "rgba(34, 211, 138, 0.07)" };
 }
 
-function DaysView({ days, medications, onDayUpdate }) {
+function DaysView({ days, medications, metrics = [], onDayUpdate }) {
   const byKey = useMemo(() => {
     const map = {};
     days.forEach(d => { map[d.id] = d; });
     return map;
   }, [days]);
+
+  const metricsById = useMemo(() => {
+    const map = {};
+    metrics.forEach(m => { map[m.id] = m; });
+    return map;
+  }, [metrics]);
+
+  // Filter chips are built from the user's own metric list.
+  const filters = useMemo(() => [
+    { key: "all", label: "All", legend: "everything logged, combined" },
+    ...(medications.length
+      ? [{ key: "medication", label: "Medication", legend: "medication adherence only" }]
+      : []),
+    ...metrics.map(m => ({
+      key: m.id,
+      label: m.label,
+      legend: `${m.label.toLowerCase()}, color-coded`
+    }))
+  ], [metrics, medications]);
 
   const latestKey = days[0]?.id;
   const initialDate = latestKey ? new Date(`${latestKey}T00:00:00`) : new Date();
@@ -96,9 +119,10 @@ function DaysView({ days, medications, onDayUpdate }) {
   }
 
   const monthLabel = firstOfMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-  const activeFilter = FILTERS.find(f => f.key === filter);
+  const activeFilter = filters.find(f => f.key === filter) || filters[0];
 
   const selectedDay = selectedKey ? byKey[selectedKey] : null;
+  const selectedValues = useMemo(() => readDayValues(selectedDay), [selectedDay]);
   const selectedDateLabel = selectedKey
     ? new Date(`${selectedKey}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" })
     : null;
@@ -109,7 +133,7 @@ function DaysView({ days, medications, onDayUpdate }) {
   return (
     <div>
       <div className="chip-row">
-        {FILTERS.map(f => (
+        {filters.map(f => (
           <span
             key={f.key}
             className={filter === f.key ? "chip active" : "chip"}
@@ -139,7 +163,7 @@ function DaysView({ days, medications, onDayUpdate }) {
             <div
               key={key}
               className={key === selectedKey ? "cal-cell selected stagger-in" : "cal-cell stagger-in"}
-              style={{ ...cellColors(day, filter, medications), animationDelay: `${Math.min(i * 12, 200)}ms` }}
+              style={{ ...cellColors(day, filter, medications, metricsById), animationDelay: `${Math.min(i * 12, 200)}ms` }}
               onClick={() => selectDay(key)}
             >
               {d}
@@ -155,6 +179,7 @@ function DaysView({ days, medications, onDayUpdate }) {
               dateKey={selectedKey}
               initialData={selectedDay}
               medications={medications}
+              metrics={metrics}
               onSave={updated => { onDayUpdate?.(updated); setEditing(false); }}
               onCancel={() => setEditing(false)}
             />
@@ -173,32 +198,29 @@ function DaysView({ days, medications, onDayUpdate }) {
               {selectedDay ? (
                 <>
                   <div className="day-stat-grid">
-                    <div className="day-stat-card">
-                      <div className="day-stat-label">Mood</div>
-                      <div className="day-stat-value">{selectedDay.mood ? `${selectedDay.mood}/5` : "—"}</div>
-                    </div>
+                    {/* Sleep is permanent, so it always leads. */}
                     <div className="day-stat-card">
                       <div className="day-stat-label">Sleep</div>
-                      <div className="day-stat-value">{selectedDay.sleep ? `${selectedDay.sleep}h` : "—"}</div>
-                    </div>
-                    <div className="day-stat-card">
-                      <div className="day-stat-label">Stress</div>
-                      <div className="day-stat-value">{selectedDay.stress ? `${selectedDay.stress}/5` : "—"}</div>
-                    </div>
-                    <div className="day-stat-card">
-                      <div className="day-stat-label">Energy</div>
-                      <div className="day-stat-value">{selectedDay.energy ? `${selectedDay.energy}/5` : "—"}</div>
-                    </div>
-                    <div className="day-stat-card">
-                      <div className="day-stat-label">Weight</div>
-                      <div className="day-stat-value">{selectedDay.weight ? `${selectedDay.weight}` : "—"}</div>
-                    </div>
-                    <div className={selectedDay.workout ? "day-stat-card positive" : "day-stat-card"}>
-                      <div className="day-stat-label">Workout</div>
-                      <div className="day-stat-value" style={{ fontSize: 13, fontWeight: 500 }}>
-                        {selectedDay.workout ? "Completed" : "Not logged"}
+                      <div className="day-stat-value">
+                        {selectedDay.sleep ? `${selectedDay.sleep}h` : "—"}
                       </div>
                     </div>
+
+                    {metrics.map(m => {
+                      const v = selectedValues[m.id];
+                      const on = m.type === "toggle" && v === true;
+                      return (
+                        <div className={on ? "day-stat-card positive" : "day-stat-card"} key={m.id}>
+                          <div className="day-stat-label">{m.label}</div>
+                          <div
+                            className="day-stat-value"
+                            style={m.type === "toggle" ? { fontSize: 13, fontWeight: 500 } : undefined}
+                          >
+                            {formatMetricDisplay(m, v)}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {medications.length > 0 && (

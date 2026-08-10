@@ -3,10 +3,12 @@ import {
   doc,
   setDoc,
   getDoc,
+  deleteDoc,
+  writeBatch,
   collection,
   getDocs,
   query,
-  orderBy,
+  limit,
   serverTimestamp
 } from "firebase/firestore";
 import { getStoredTimezone } from "../utils/timezone";
@@ -79,4 +81,60 @@ export async function getMedications(uid) {
   const ref = doc(db, "users", uid);
   const snap = await getDoc(ref);
   return snap.exists() && snap.data().medications ? snap.data().medications : [];
+}
+
+// --- Tracked metrics (user-defined) ---
+
+export async function saveMetrics(uid, metrics) {
+  const ref = doc(db, "users", uid);
+  await setDoc(ref, { metrics }, { merge: true });
+}
+
+export async function getMetrics(uid) {
+  const ref = doc(db, "users", uid);
+  const snap = await getDoc(ref);
+  return snap.exists() && snap.data().metrics ? snap.data().metrics : null;
+}
+
+// Cheap existence probe used by the onboarding gate: an account with entries but
+// no metric list predates custom metrics and should be seeded silently rather
+// than pushed through setup.
+export async function hasAnyDayEntries(uid) {
+  const snap = await getDocs(query(collection(db, "users", uid, "days"), limit(1)));
+  return !snap.empty;
+}
+
+// --- Data portability / erasure ---
+
+// Everything stored about this user, for the Settings export button.
+export async function exportAllUserData(uid) {
+  const [profile, days] = await Promise.all([
+    getUserProfile(uid),
+    getHistory(uid)
+  ]);
+  return { profile: profile || {}, days };
+}
+
+// Firestore batches cap at 500 writes; stay comfortably under.
+const DELETE_BATCH_SIZE = 400;
+
+// Permanently removes every document belonging to this user.
+//
+// Deleting /users/{uid} does NOT cascade to its `days` subcollection — Firestore
+// subcollections live independently of their parent document. Deleting only the
+// parent would leave every daily entry stranded in the database: still stored,
+// still billable, and still the user's personal data despite them having asked
+// for it to be erased. So the day documents are deleted explicitly first.
+export async function deleteAllUserData(uid) {
+  const daysSnap = await getDocs(collection(db, "users", uid, "days"));
+  const dayDocs = daysSnap.docs;
+
+  for (let i = 0; i < dayDocs.length; i += DELETE_BATCH_SIZE) {
+    const batch = writeBatch(db);
+    dayDocs.slice(i, i + DELETE_BATCH_SIZE).forEach(d => batch.delete(d.ref));
+    await batch.commit();
+  }
+
+  await deleteDoc(doc(db, "users", uid));
+  return dayDocs.length;
 }

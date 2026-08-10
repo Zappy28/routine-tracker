@@ -12,6 +12,15 @@ dist
 dist-ssr
 *.local
 
+# Firebase local deploy cache (build artifact — .firebaserc stays tracked)
+.firebase/
+# Never commit service-account keys or local env secrets
+*serviceAccount*.json
+*service-account*.json
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

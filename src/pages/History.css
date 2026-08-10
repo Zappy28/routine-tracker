@@ -636,3 +636,32 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* ---------- Desktop ---------- */
+/* Must stay LAST in this file — media queries carry no extra specificity, so
+   these have to come after the base rules they override. */
+
+@media (min-width: 768px) {
+  /* Calendar cells are square, so letting the grid span a 720px column blows
+     them up to ~90px each around a 10px numeral. Cap and center it instead. */
+  .cal-grid {
+    max-width: 440px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .month-nav {
+    max-width: 440px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Same reasoning as .segmented/.stepper-inline on the dashboard. */
+  .range-row {
+    max-width: 440px;
+  }
+
+  .day-stat-grid {
+    max-width: 560px;
+  }
+}
